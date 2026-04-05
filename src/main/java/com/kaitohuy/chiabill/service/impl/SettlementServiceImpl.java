@@ -36,84 +36,108 @@ public class SettlementServiceImpl implements SettlementService {
             throw new BusinessException("Access denied: not a member of this trip");
         }
 
-        // 2. Lấy toàn bộ dữ liệu Expenses và Approved Payments
+        // 2. Lấy toàn bộ dữ liệu
         List<Expense> expenses = expenseRepository.fetchAllDataForSettlement(tripId);
         List<Payment> payments = paymentRepository.findByTripIdAndStatus(tripId, PaymentStatus.APPROVED);
+        List<TripMember> members = tripMemberRepository.findByTripId(tripId);
 
-        // 3. Map để gom nợ giữa từng cặp (fromId -> toId -> DebtInfo)
-        Map<Long, Map<Long, DebtInfo>> debtMap = new HashMap<>();
+        // Map để lưu trữ thông tin cơ bản
         Map<Long, String> nameMap = new HashMap<>();
+        Map<Long, Boolean> activeMap = new HashMap<>();
+        Map<Long, BigDecimal> netBalances = new HashMap<>();
 
-        Map<Long, Boolean> activeMap = tripMemberRepository.findByTripId(tripId).stream()
-                .collect(Collectors.toMap(tm -> tm.getUser().getId(), TripMember::getIsActive, (a, b) -> a));
+        for (TripMember member : members) {
+            Long mid = member.getUser().getId();
+            nameMap.put(mid, member.getUser().getName());
+            activeMap.put(mid, member.getIsActive());
+            netBalances.put(mid, BigDecimal.ZERO);
+        }
 
-        // 4. Xử lý Expenses (Tính nợ gốc)
+        // 3. Tính toán Net Balance cho từng người
+        // Balance = (Số tiền người khác nợ mình) - (Số tiền mình nợ người khác)
+        
+        // Xử lý Expenses
         for (Expense expense : expenses) {
             Long payerId = expense.getPayer().getId();
-            nameMap.putIfAbsent(payerId, expense.getPayer().getName());
-
             for (ExpenseSplit split : expense.getSplits()) {
                 Long debtorId = split.getUser().getId();
-                nameMap.putIfAbsent(debtorId, split.getUser().getName());
+                BigDecimal amount = split.getAmount();
 
                 if (!debtorId.equals(payerId)) {
-                    addOriginalDebt(debtMap, debtorId, payerId, split.getAmount());
+                    // Payer được cộng tiền (người khác nợ họ)
+                    netBalances.put(payerId, netBalances.get(payerId).add(amount));
+                    // Debtor bị trừ tiền (họ nợ người khác)
+                    netBalances.put(debtorId, netBalances.get(debtorId).subtract(amount));
                 }
             }
         }
 
-        // 5. Xử lý Payments (Trừ nợ đã trả)
+        // Xử lý Approved Payments (Người dùng trả nợ trực tiếp cho nhau)
         for (Payment payment : payments) {
-            Long fromId = payment.getFromUser().getId();
-            Long toId = payment.getToUser().getId();
-            addPaidAmount(debtMap, fromId, toId, payment.getAmount());
+            Long fromId = payment.getFromUser().getId(); // Người trả
+            Long toId = payment.getToUser().getId();     // Người nhận
+            BigDecimal amount = payment.getAmount();
+
+            // FromUser trả nợ -> Giảm số tiền họ nợ (Tăng balance)
+            netBalances.put(fromId, netBalances.get(fromId).add(amount));
+            // ToUser nhận tiền -> Giảm số tiền họ được nợ (Giảm balance)
+            netBalances.put(toId, netBalances.get(toId).subtract(amount));
         }
 
-        // 6. Chốt danh sách cuối cùng
-        List<SettlementResponse> result = new ArrayList<>();
+        // 4. Phân loại Chủ nợ (Creditors) và Con nợ (Debtors)
+        List<UserBalance> creditors = new ArrayList<>();
+        List<UserBalance> debtors = new ArrayList<>();
 
-        for (Map.Entry<Long, Map<Long, DebtInfo>> fromEntry : debtMap.entrySet()) {
-            Long fromId = fromEntry.getKey();
-            for (Map.Entry<Long, DebtInfo> toEntry : fromEntry.getValue().entrySet()) {
-                Long toId = toEntry.getKey();
-                DebtInfo info = toEntry.getValue();
-
-                BigDecimal remaining = info.original.subtract(info.paid).setScale(2, RoundingMode.HALF_UP);
-
-                // Nếu còn nợ (hoặc dư nợ) thì mới hiển thị
-                if (remaining.abs().compareTo(new BigDecimal("0.01")) > 0) {
-                    SettlementResponse res = new SettlementResponse();
-                    res.setFromUserId(fromId);
-                    res.setFromUserName(nameMap.get(fromId));
-                    res.setToUserId(toId);
-                    res.setToUserName(nameMap.get(toId));
-                    res.setAmount(remaining);
-                    res.setOriginalAmount(info.original);
-                    res.setPaidAmount(info.paid);
-                    res.setFromUserActive(activeMap.getOrDefault(fromId, false));
-                    res.setToUserActive(activeMap.getOrDefault(toId, false));
-                    result.add(res);
-                }
+        for (Map.Entry<Long, BigDecimal> entry : netBalances.entrySet()) {
+            BigDecimal bal = entry.getValue().setScale(2, RoundingMode.HALF_UP);
+            if (bal.compareTo(BigDecimal.ZERO) > 0) {
+                creditors.add(new UserBalance(entry.getKey(), bal));
+            } else if (bal.compareTo(BigDecimal.ZERO) < 0) {
+                debtors.add(new UserBalance(entry.getKey(), bal.abs()));
             }
+        }
+
+        // 5. Thuật toán Greedy để khớp nợ (Minimize Cash Flow)
+        List<SettlementResponse> result = new ArrayList<>();
+        
+        int cIdx = 0;
+        int dIdx = 0;
+
+        while (cIdx < creditors.size() && dIdx < debtors.size()) {
+            UserBalance creditor = creditors.get(cIdx);
+            UserBalance debtor = debtors.get(dIdx);
+
+            BigDecimal settleAmount = creditor.balance.min(debtor.balance);
+
+            if (settleAmount.compareTo(new BigDecimal("0.01")) > 0) {
+                SettlementResponse res = new SettlementResponse();
+                res.setFromUserId(debtor.userId);
+                res.setFromUserName(nameMap.get(debtor.userId));
+                res.setToUserId(creditor.userId);
+                res.setToUserName(nameMap.get(creditor.userId));
+                res.setAmount(settleAmount);
+                res.setFromUserActive(activeMap.getOrDefault(debtor.userId, false));
+                res.setToUserActive(activeMap.getOrDefault(creditor.userId, false));
+                result.add(res);
+            }
+
+            creditor.balance = creditor.balance.subtract(settleAmount);
+            debtor.balance = debtor.balance.subtract(settleAmount);
+
+            if (creditor.balance.compareTo(new BigDecimal("0.01")) < 0) cIdx++;
+            if (debtor.balance.compareTo(new BigDecimal("0.01")) < 0) dIdx++;
         }
 
         return result;
     }
 
-    private void addOriginalDebt(Map<Long, Map<Long, DebtInfo>> map, Long from, Long to, BigDecimal amount) {
-        map.computeIfAbsent(from, k -> new HashMap<>())
-           .computeIfAbsent(to, k -> new DebtInfo())
-           .original = map.get(from).get(to).original.add(amount);
-    }
+    private static class UserBalance {
+        Long userId;
+        BigDecimal balance;
 
-    private void addPaidAmount(Map<Long, Map<Long, DebtInfo>> map, Long from, Long to, BigDecimal amount) {
-        map.computeIfAbsent(from, k -> new HashMap<>())
-           .computeIfAbsent(to, k -> new DebtInfo())
-           .paid = map.get(from).get(to).paid.add(amount);
-    }
-
-    private static class DebtInfo {
-        BigDecimal original = BigDecimal.ZERO;
-        BigDecimal paid = BigDecimal.ZERO;
+        UserBalance(Long userId, BigDecimal balance) {
+            this.userId = userId;
+            this.balance = balance;
+        }
     }
 }
