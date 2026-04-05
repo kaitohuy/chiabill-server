@@ -38,4 +38,5 @@ out/
 
 ### Secrets ###
 .env
+.env.prod
 chiabill-firebase.json
