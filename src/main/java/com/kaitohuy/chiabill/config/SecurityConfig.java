@@ -25,7 +25,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("api/categories/seed").permitAll()
-                        .requestMatchers("/api/expenses/**").permitAll()
+                        .requestMatchers("/healthz").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/invites/*").permitAll()
                         .anyRequest().authenticated()
                 )
