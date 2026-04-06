@@ -2,6 +2,7 @@ package com.kaitohuy.chiabill.controller;
 
 import com.kaitohuy.chiabill.dto.response.ApiResponse;
 import com.kaitohuy.chiabill.dto.response.SettlementResponse;
+import com.kaitohuy.chiabill.dto.response.SettlementSummaryResponse;
 import com.kaitohuy.chiabill.security.UserPrincipal;
 import com.kaitohuy.chiabill.service.interfaces.SettlementService;
 
@@ -17,6 +18,15 @@ import java.util.List;
 public class SettlementController {
 
     private final SettlementService settlementService;
+
+    @GetMapping("/summary")
+    public ApiResponse<SettlementSummaryResponse> getSettlementSummary(Authentication authentication) {
+        Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
+        return ApiResponse.<SettlementSummaryResponse>builder()
+                .success(true)
+                .data(settlementService.getSettlementSummary(userId))
+                .build();
+    }
 
     @GetMapping("/trip/{tripId}")
     public ApiResponse<List<SettlementResponse>> getSettlement(

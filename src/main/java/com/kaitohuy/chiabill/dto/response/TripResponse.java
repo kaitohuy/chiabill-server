@@ -22,4 +22,5 @@ public class TripResponse {
     private Long ownerId;
     private LocalDateTime createdAt;
     private List<TripMemberResponse> members;
+    private Integer memberCount;
 }

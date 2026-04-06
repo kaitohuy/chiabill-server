@@ -1,6 +1,7 @@
 package com.kaitohuy.chiabill.service.impl;
 
 import com.kaitohuy.chiabill.dto.response.SettlementResponse;
+import com.kaitohuy.chiabill.dto.response.SettlementSummaryResponse;
 import com.kaitohuy.chiabill.entity.Expense;
 import com.kaitohuy.chiabill.entity.ExpenseSplit;
 import com.kaitohuy.chiabill.entity.Payment;
@@ -36,53 +37,20 @@ public class SettlementServiceImpl implements SettlementService {
             throw new BusinessException("Access denied: not a member of this trip");
         }
 
-        // 2. Lấy toàn bộ dữ liệu
-        List<Expense> expenses = expenseRepository.fetchAllDataForSettlement(tripId);
-        List<Payment> payments = paymentRepository.findByTripIdAndStatus(tripId, PaymentStatus.APPROVED);
+        // 2. Lấy toàn bộ dữ liệu & Tính Net Balance
         List<TripMember> members = tripMemberRepository.findByTripId(tripId);
+        Map<Long, BigDecimal> netBalances = calculateNetBalances(tripId, members);
 
         // Map để lưu trữ thông tin cơ bản
         Map<Long, String> nameMap = new HashMap<>();
         Map<Long, Boolean> activeMap = new HashMap<>();
-        Map<Long, BigDecimal> netBalances = new HashMap<>();
 
         for (TripMember member : members) {
             Long mid = member.getUser().getId();
             nameMap.put(mid, member.getUser().getName());
             activeMap.put(mid, member.getIsActive());
-            netBalances.put(mid, BigDecimal.ZERO);
         }
 
-        // 3. Tính toán Net Balance cho từng người
-        // Balance = (Số tiền người khác nợ mình) - (Số tiền mình nợ người khác)
-        
-        // Xử lý Expenses
-        for (Expense expense : expenses) {
-            Long payerId = expense.getPayer().getId();
-            for (ExpenseSplit split : expense.getSplits()) {
-                Long debtorId = split.getUser().getId();
-                BigDecimal amount = split.getAmount();
-
-                if (!debtorId.equals(payerId)) {
-                    // Payer được cộng tiền (người khác nợ họ)
-                    netBalances.put(payerId, netBalances.get(payerId).add(amount));
-                    // Debtor bị trừ tiền (họ nợ người khác)
-                    netBalances.put(debtorId, netBalances.get(debtorId).subtract(amount));
-                }
-            }
-        }
-
-        // Xử lý Approved Payments (Người dùng trả nợ trực tiếp cho nhau)
-        for (Payment payment : payments) {
-            Long fromId = payment.getFromUser().getId(); // Người trả
-            Long toId = payment.getToUser().getId();     // Người nhận
-            BigDecimal amount = payment.getAmount();
-
-            // FromUser trả nợ -> Giảm số tiền họ nợ (Tăng balance)
-            netBalances.put(fromId, netBalances.get(fromId).add(amount));
-            // ToUser nhận tiền -> Giảm số tiền họ được nợ (Giảm balance)
-            netBalances.put(toId, netBalances.get(toId).subtract(amount));
-        }
 
         // 4. Phân loại Chủ nợ (Creditors) và Con nợ (Debtors)
         List<UserBalance> creditors = new ArrayList<>();
@@ -129,6 +97,71 @@ public class SettlementServiceImpl implements SettlementService {
         }
 
         return result;
+    }
+
+    @Override
+    public SettlementSummaryResponse getSettlementSummary(Long userId) {
+        List<TripMember> memberships = tripMemberRepository.findByUserIdAndIsActiveTrue(userId);
+
+        BigDecimal totalOwed = BigDecimal.ZERO;
+        BigDecimal totalReceivable = BigDecimal.ZERO;
+
+        for (TripMember member : memberships) {
+            Long tripId = member.getTrip().getId();
+            List<TripMember> allTripMembers = tripMemberRepository.findByTripId(tripId);
+            Map<Long, BigDecimal> balances = calculateNetBalances(tripId, allTripMembers);
+
+            BigDecimal userBalance = balances.getOrDefault(userId, BigDecimal.ZERO);
+
+            if (userBalance.compareTo(BigDecimal.ZERO) > 0) {
+                totalReceivable = totalReceivable.add(userBalance);
+            } else if (userBalance.compareTo(BigDecimal.ZERO) < 0) {
+                totalOwed = totalOwed.add(userBalance.abs());
+            }
+        }
+
+        return SettlementSummaryResponse.builder()
+                .totalOwed(totalOwed.setScale(2, RoundingMode.HALF_UP))
+                .totalReceivable(totalReceivable.setScale(2, RoundingMode.HALF_UP))
+                .build();
+    }
+
+    private Map<Long, BigDecimal> calculateNetBalances(Long tripId, List<TripMember> members) {
+        List<Expense> expenses = expenseRepository.fetchAllDataForSettlement(tripId);
+        List<Payment> payments = paymentRepository.findByTripIdAndStatus(tripId, PaymentStatus.APPROVED);
+
+        Map<Long, BigDecimal> netBalances = new HashMap<>();
+        for (TripMember member : members) {
+            netBalances.put(member.getUser().getId(), BigDecimal.ZERO);
+        }
+
+        // Processing Expenses
+        for (Expense expense : expenses) {
+            Long payerId = expense.getPayer().getId();
+            for (ExpenseSplit split : expense.getSplits()) {
+                Long debtorId = split.getUser().getId();
+                BigDecimal amount = split.getAmount();
+
+                if (!debtorId.equals(payerId)) {
+                    // Payer gets credit
+                    netBalances.put(payerId, netBalances.getOrDefault(payerId, BigDecimal.ZERO).add(amount));
+                    // Debtor gets debit
+                    netBalances.put(debtorId, netBalances.getOrDefault(debtorId, BigDecimal.ZERO).subtract(amount));
+                }
+            }
+        }
+
+        // Processing Payments
+        for (Payment payment : payments) {
+            Long fromId = payment.getFromUser().getId();
+            Long toId = payment.getToUser().getId();
+            BigDecimal amount = payment.getAmount();
+
+            netBalances.put(fromId, netBalances.getOrDefault(fromId, BigDecimal.ZERO).add(amount));
+            netBalances.put(toId, netBalances.getOrDefault(toId, BigDecimal.ZERO).subtract(amount));
+        }
+
+        return netBalances;
     }
 
     private static class UserBalance {

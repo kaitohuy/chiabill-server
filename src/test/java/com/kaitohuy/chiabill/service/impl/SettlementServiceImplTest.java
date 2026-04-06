@@ -1,6 +1,7 @@
 package com.kaitohuy.chiabill.service.impl;
 
 import com.kaitohuy.chiabill.dto.response.SettlementResponse;
+import com.kaitohuy.chiabill.dto.response.SettlementSummaryResponse;
 import com.kaitohuy.chiabill.entity.*;
 import com.kaitohuy.chiabill.repository.ExpenseRepository;
 import com.kaitohuy.chiabill.repository.PaymentRepository;
@@ -183,6 +184,40 @@ class SettlementServiceImplTest {
         List<SettlementResponse> results = settlementService.calculateSettlement(1L, 1L);
 
         assertTrue(results.isEmpty(), "Results should be empty when everyone is balanced");
+    }
+
+    @Test
+    void getSettlementSummary_MultipleTrips_Success() {
+        // Trip 1: User 1 (Hồng) owes User 2 (Hiền) 100k
+        // Trip 2: User 3 (Huy) owes User 1 (Hồng) 150k
+        // Expected Summary for Hồng: Total Owed = 100, Total Receivable = 150
+        
+        Trip t1 = new Trip(); t1.setId(1L);
+        Trip t2 = new Trip(); t2.setId(2L);
+        
+        TripMember m1_t1 = createMember(hong); m1_t1.setTrip(t1);
+        TripMember m1_t2 = createMember(hong); m1_t2.setTrip(t2);
+        
+        when(tripMemberRepository.findByUserIdAndIsActiveTrue(hong.getId()))
+                .thenReturn(Arrays.asList(m1_t1, m1_t2));
+        
+        // Mock Trip 1
+        when(tripMemberRepository.findByTripId(1L)).thenReturn(Arrays.asList(createMember(hong), createMember(hien)));
+        Expense exp1 = createExpense(hien, Collections.singletonList(createSplit(hong, 100)));
+        when(expenseRepository.fetchAllDataForSettlement(1L)).thenReturn(Collections.singletonList(exp1));
+        when(paymentRepository.findByTripIdAndStatus(1L, PaymentStatus.APPROVED)).thenReturn(Collections.emptyList());
+
+        // Mock Trip 2
+        when(tripMemberRepository.findByTripId(2L)).thenReturn(Arrays.asList(createMember(hong), createMember(huy)));
+        Expense exp2 = createExpense(hong, Collections.singletonList(createSplit(huy, 150)));
+        when(expenseRepository.fetchAllDataForSettlement(2L)).thenReturn(Collections.singletonList(exp2));
+        when(paymentRepository.findByTripIdAndStatus(2L, PaymentStatus.APPROVED)).thenReturn(Collections.emptyList());
+
+        SettlementSummaryResponse summary = settlementService.getSettlementSummary(hong.getId());
+
+        assertNotNull(summary);
+        assertEquals(0, summary.getTotalOwed().compareTo(BigDecimal.valueOf(100)));
+        assertEquals(0, summary.getTotalReceivable().compareTo(BigDecimal.valueOf(150)));
     }
 
     private void mockData(List<Expense> expenses, List<Payment> payments) {

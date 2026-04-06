@@ -61,6 +61,7 @@ public class TripServiceImpl implements TripService {
         Trip trip = Trip.builder()
                 .name(request.getName())
                 .description(request.getDescription())
+                .totalBudget(request.getTotalBudget())
                 .createdBy(creator)
                 .build();
 
@@ -117,6 +118,7 @@ public class TripServiceImpl implements TripService {
                     TripResponse res = tripMapper.toResponse(trip);
                     List<TripMemberResponse> members = memberMap.getOrDefault(trip.getId(), List.of());
                     res.setMembers(members);
+                    res.setMemberCount(members.size());
                     
                     // Gán Owner Id cho trip response
                     members.stream()
@@ -305,6 +307,7 @@ public class TripServiceImpl implements TripService {
 
         trip.setName(request.getName());
         trip.setDescription(request.getDescription());
+        trip.setTotalBudget(request.getTotalBudget());
 
         tripRepository.save(trip);
 
@@ -520,6 +523,7 @@ public class TripServiceImpl implements TripService {
                 .toList();
 
         res.setMembers(memberResponses);
+        res.setMemberCount(memberResponses.size());
         return res;
     }
 
