@@ -27,6 +27,8 @@ public class SecurityConfig {
                         .requestMatchers("api/categories/seed").permitAll()
                         .requestMatchers("/healthz").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/invites/*").permitAll()
+                        .requestMatchers("/.well-known/assetlinks.json").permitAll()
+                        .requestMatchers("/join/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter,
