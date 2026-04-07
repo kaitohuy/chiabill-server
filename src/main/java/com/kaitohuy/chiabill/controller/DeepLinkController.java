@@ -57,7 +57,7 @@ public class DeepLinkController {
                         
                         .container {
                             max-width: 450px;
-                            width: 90%%;
+                            width: 100%%;
                             padding: 2.5rem;
                             background: var(--card-bg);
                             backdrop-filter: blur(12px);
