@@ -17,7 +17,6 @@ public class DeepLinkController {
 
     @GetMapping(value = "/join/{inviteCode}", produces = MediaType.TEXT_HTML_VALUE)
     public String joinTripLandingPage(@PathVariable String inviteCode) {
-        String joinUrl = baseUrl + "/join/" + inviteCode;
         String intentUrl = "intent://chiabill-server.onrender.com/join/" + inviteCode + "#Intent;scheme=https;package=com.kaitohuy.chiabill;end";
         
         // KHÔNG dùng String.formatted() vì ký tự % trong CSS gây lỗi UnknownFormatConversionException
