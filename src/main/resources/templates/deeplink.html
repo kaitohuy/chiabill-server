@@ -6,43 +6,142 @@
     <title>Lời mời tham gia - ChiaBill</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #22c55e; --primary-dark: #16a34a; --bg: #0f172a; --card-bg: rgba(30, 41, 59, 0.6); --text: #f8fafc; --text-muted: #94a3b8; }
+        :root { 
+            --primary: #8bc34a; /* Xanh lá mạ tươi sáng */
+            --primary-dark: #689f38; 
+            --bg: #f4f9f4; /* Nền trắng hơi ám xanh lục cực nhẹ */
+            --card-bg: #ffffff; /* Thẻ màu trắng tinh */
+            --text: #1e293b; /* Chữ xám đậm, dễ đọc */
+            --text-muted: #64748b; /* Chữ phụ xám nhạt hơn */
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
         
-        /* Cố định 100vh để chống Scroll */
-        body { background: radial-gradient(circle at top left, #064e3b, #0f172a); color: var(--text); height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        body { 
+            /* Gradient nền dịu mắt */
+            background: linear-gradient(135deg, #e8f5e9 0%, #f8fafc 100%); 
+            color: var(--text); 
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
         
-        /* Gắn kính và thu hẹp Padding để nhét vừa trên điện thoại màn nhỏ */
-        .container { max-width: 400px; width: 90%; margin: 0 auto; padding: 1.5rem 2rem; background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.5rem; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); animation: zoomIn 0.5s ease-out forwards; display: flex; flex-direction: column; align-items: center;}
+        .container { 
+            max-width: 400px; 
+            width: 90%; 
+            margin: 0 auto; 
+            padding: 2.5rem 2rem; 
+            background: var(--card-bg); 
+            border-radius: 1.5rem; 
+            text-align: center; 
+            box-shadow: 0 20px 40px -10px rgba(100, 116, 139, 0.12); /* Đổ bóng cực êm cho light mode */
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; /* Animation mượt hơn */
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+        }
         
-        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
         
-        .header-logo { width: 50px; height: 50px; margin-bottom: 0.75rem; border-radius: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .badge { display: inline-block; padding: 0.3rem 1rem; background: rgba(34, 197, 94, 0.15); color: #4ade80; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; margin-bottom: 0.75rem; letter-spacing: 1px;}
-        h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; color: #ffffff; }
-        p { color: var(--text-muted); line-height: 1.4; margin-bottom: 1.25rem; font-size: 0.95rem; }
+        .header-logo { 
+            width: 65px; 
+            height: 65px; 
+            margin-bottom: 1rem; 
+            border-radius: 1rem; 
+            box-shadow: 0 8px 16px rgba(139, 195, 74, 0.2); 
+        }
         
-        /* Gif sinh động ở giữa */
-        .hero-img { width: 100%; max-width: 220px; height: auto; border-radius: 1rem; margin-bottom: 1.25rem; border: 2px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .badge { 
+            display: inline-block; 
+            padding: 0.4rem 1.2rem; 
+            background: rgba(139, 195, 74, 0.15); 
+            color: var(--primary-dark); 
+            border-radius: 2rem; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            margin-bottom: 1rem; 
+            letter-spacing: 0.5px;
+        }
         
-        /* Nút màu chính của app */
-        .btn { display: inline-flex; justify-content: center; align-items: center; width: 100%; padding: 0.85rem 1.5rem; background: linear-gradient(to right, var(--primary), var(--primary-dark)); color: white; text-decoration: none; border-radius: 0.8rem; font-weight: 600; font-size: 1rem; transition: all 0.3s ease; border: none; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.4); }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.5); }
-        .btn-svg { width: 22px; height: 22px; margin-right: 8px; fill: currentColor; }
+        h1 { 
+            font-size: 1.6rem; 
+            font-weight: 700; 
+            margin-bottom: 0.5rem; 
+            color: var(--text); 
+        }
         
-        .footer-link { margin-top: 1rem; display: inline-block; font-size: 0.85rem; color: #94a3b8; text-decoration: none; transition: color 0.3s; }
-        .footer-link:hover { color: #ffffff; text-decoration: underline; }
+        p { 
+            color: var(--text-muted); 
+            line-height: 1.5; 
+            margin-bottom: 1.5rem; 
+            font-size: 0.95rem; 
+        }
+        
+        .hero-img { 
+            width: 100%; 
+            max-width: 220px; 
+            height: auto; 
+            border-radius: 1rem; 
+            margin-bottom: 1.5rem; 
+        }
+        
+        .btn { 
+            display: inline-flex; 
+            justify-content: center; 
+            align-items: center; 
+            width: 100%; 
+            padding: 0.85rem 1.5rem; 
+            background: linear-gradient(to right, var(--primary), #7cb342); 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 0.8rem; 
+            font-weight: 600; 
+            font-size: 1rem; 
+            transition: all 0.3s ease; 
+            border: none; 
+            cursor: pointer; 
+            box-shadow: 0 4px 12px rgba(139, 195, 74, 0.3); 
+        }
+        
+        .btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 20px rgba(139, 195, 74, 0.4); 
+        }
+        
+        .btn-svg { 
+            width: 22px; 
+            height: 22px; 
+            margin-right: 8px; 
+            fill: currentColor; 
+        }
+        
+        .footer-link { 
+            margin-top: 1.2rem; 
+            display: inline-block; 
+            font-size: 0.85rem; 
+            color: var(--text-muted); 
+            text-decoration: none; 
+            transition: color 0.3s; 
+            font-weight: 500;
+        }
+        
+        .footer-link:hover { 
+            color: var(--primary-dark); 
+            text-decoration: underline; 
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Ảnh logo tải từ assets Android -->
         <img src="/images/logo.png" alt="ChiaBill" class="header-logo">
         <div class="badge">LỜI MỜI THAM GIA</div>
         <h1>ChiaBill</h1>
-        <p>Bạn vừa được mời vào một nhóm chia tiền chung. Hãy chấp nhận tham gia nhé!</p>
+        <p>Bạn vừa được mời vào một nhóm chia tiền chung. Hãy mở ứng dụng để tham gia nhé!</p>
         
-        <!-- Ảnh Gif sinh động -->
         <img src="/images/join_trip.gif" alt="Tham gia" class="hero-img">
         
         <a href="{{intentUrl}}" class="btn">
