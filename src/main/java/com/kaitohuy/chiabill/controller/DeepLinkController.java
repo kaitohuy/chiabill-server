@@ -18,6 +18,7 @@ public class DeepLinkController {
     @GetMapping(value = "/join/{inviteCode}", produces = MediaType.TEXT_HTML_VALUE)
     public String joinTripLandingPage(@PathVariable String inviteCode) {
         String joinUrl = baseUrl + "/join/" + inviteCode;
+        String intentUrl = "intent://chiabill-server.onrender.com/join/" + inviteCode + "#Intent;scheme=https;package=com.kaitohuy.chiabill;end";
         
         // KHÔNG dùng String.formatted() vì ký tự % trong CSS gây lỗi UnknownFormatConversionException
         return "<!DOCTYPE html>"
@@ -49,7 +50,7 @@ public class DeepLinkController {
                 + "<div class=\"badge\">LỜI MỜI THAM GIA</div>"
                 + "<h1>ChiaBill - Chia sẻ chi phí</h1>"
                 + "<p>Bạn đã được mời tham gia một chuyến đi mới. Vui lòng mở ứng dụng ChiaBill hoặc tải xuống để bắt đầu chia sẻ chi phí cùng mọi người!</p>"
-                + "<a href=\"" + joinUrl + "\" class=\"btn\">Mở ứng dụng</a>"
+                + "<a href=\"" + intentUrl + "\" class=\"btn\">Mở ứng dụng</a>"
                 + "<a href=\"" + downloadLink + "\" class=\"btn btn-secondary\">Tải ứng dụng (Google Drive)</a>"
                 + "</div>"
                 + "</body>"
