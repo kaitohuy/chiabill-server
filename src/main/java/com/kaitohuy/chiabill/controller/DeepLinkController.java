@@ -1,5 +1,6 @@
 package com.kaitohuy.chiabill.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -8,12 +9,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class DeepLinkController {
 
-    private static final String DOWNLOAD_LINK = "https://drive.google.com/open?id=YOUR_DRIVE_ID";
-    private static final String BASE_URL = "https://chiabill-server.onrender.com";
+    @Value("${download_link}")
+    private String downloadLink;
+
+    @Value("${base_url}")
+    private String baseUrl;
 
     @GetMapping(value = "/join/{inviteCode}", produces = MediaType.TEXT_HTML_VALUE)
     public String joinTripLandingPage(@PathVariable String inviteCode) {
-        String joinUrl = BASE_URL + "/join/" + inviteCode;
+        String joinUrl = baseUrl + "/join/" + inviteCode;
         
         return """
                 <!DOCTYPE html>
@@ -157,6 +161,6 @@ public class DeepLinkController {
                     </div>
                 </body>
                 </html>
-                """.formatted(joinUrl, DOWNLOAD_LINK);
+                """.formatted(joinUrl, downloadLink);
     }
 }
