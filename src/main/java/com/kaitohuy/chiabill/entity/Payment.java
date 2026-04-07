@@ -5,7 +5,12 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "payments")
+@Table(name = "payments", indexes = {
+    @Index(name = "idx_payment_trip", columnList = "trip_id"),
+    @Index(name = "idx_payment_from", columnList = "from_user_id"),
+    @Index(name = "idx_payment_to", columnList = "to_user_id"),
+    @Index(name = "idx_payment_is_deleted", columnList = "is_deleted")
+})
 @Getter
 @Setter
 @Builder

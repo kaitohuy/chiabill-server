@@ -12,4 +12,8 @@ public interface TripInvitationRepository extends JpaRepository<TripInvitation, 
     Optional<TripInvitation> findByIdAndIsActiveTrue(String id);
 
     Optional<TripInvitation> findFirstByTripIdAndIsActiveTrueOrderByCreatedAtDesc(Long tripId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM TripInvitation ti WHERE ti.trip.id IN :tripIds")
+    void deleteByTripIdIn(@org.springframework.data.repository.query.Param("tripIds") java.util.List<Long> tripIds);
 }

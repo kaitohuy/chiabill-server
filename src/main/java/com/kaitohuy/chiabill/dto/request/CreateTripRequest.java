@@ -7,5 +7,6 @@ import java.math.BigDecimal;
 public class CreateTripRequest {
     private String name;
     private String description;
+    private String coverUrl;
     private BigDecimal totalBudget;
 }

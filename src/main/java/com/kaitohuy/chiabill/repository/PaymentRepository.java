@@ -11,5 +11,9 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, JpaSpec
     
     List<Payment> findByTripIdAndStatus(Long tripId, PaymentStatus status);
 
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM Payment p WHERE p.trip.id IN :tripIds")
+    void deleteByTripIdIn(@org.springframework.data.repository.query.Param("tripIds") java.util.List<Long> tripIds);
+
     List<Payment> findByTripId(Long tripId);
 }

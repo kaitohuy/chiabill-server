@@ -6,7 +6,9 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "trips")
+@Table(name = "trips", indexes = {
+    @Index(name = "idx_trip_is_deleted", columnList = "is_deleted")
+})
 @Getter
 @Setter
 @Builder

@@ -19,5 +19,7 @@ public class CreateExpenseRequest {
 
     private LocalDateTime expenseDate;
 
+    private String receiptUrl;
+
     private List<SplitRequest> splits;
 }

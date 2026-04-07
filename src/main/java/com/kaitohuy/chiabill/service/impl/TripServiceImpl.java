@@ -45,6 +45,8 @@ public class TripServiceImpl implements TripService {
     private final ExpenseSplitRepository expenseSplitRepository;
     private final ExpenseCategoryRepository categoryRepository;
 
+    private final com.kaitohuy.chiabill.service.interfaces.CloudinaryService cloudinaryService;
+
     private final TripMapper tripMapper;
     private final UserMapper userMapper;
 
@@ -61,6 +63,7 @@ public class TripServiceImpl implements TripService {
         Trip trip = Trip.builder()
                 .name(request.getName())
                 .description(request.getDescription())
+                .coverUrl(request.getCoverUrl())
                 .totalBudget(request.getTotalBudget())
                 .createdBy(creator)
                 .build();
@@ -133,15 +136,61 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public PageResponse<TripResponse> getMyTripsPaginated(Long userId, String keyword, Pageable pageable) {
-        // Query dữ liệu với specification
+        // 1. Query dữ liệu với specification
         Page<Trip> tripPage = tripRepository.findAll(
                 TripSpecification.filter(userId, keyword),
                 pageable
         );
 
-        // Map to response
+        if (tripPage.isEmpty()) {
+            return PageResponse.<TripResponse>builder()
+                    .content(List.of())
+                    .pageNumber(tripPage.getNumber())
+                    .pageSize(tripPage.getSize())
+                    .totalElements(tripPage.getTotalElements())
+                    .totalPages(tripPage.getTotalPages())
+                    .last(tripPage.isLast())
+                    .build();
+        }
+
+        // 2. Batch load members for all trips on the current page
+        List<Long> tripIds = tripPage.getContent().stream()
+                .map(Trip::getId)
+                .toList();
+
+        List<TripMember> allMembers = tripMemberRepository.findAllByTripIdsWithUser(tripIds);
+
+        Map<Long, List<TripMemberResponse>> memberMap = allMembers.stream()
+                .collect(Collectors.groupingBy(
+                        tm -> tm.getTrip().getId(),
+                        Collectors.mapping(
+                                tm -> TripMemberResponse.builder()
+                                        .id(tm.getUser().getId())
+                                        .name(tm.getUser().getName())
+                                        .avatarUrl(tm.getUser().getAvatarUrl())
+                                        .role(tm.getRole())
+                                        .status(tm.getStatus().name())
+                                        .build(),
+                                Collectors.toList()
+                        )
+                ));
+
+        // 3. Map to response
         List<TripResponse> content = tripPage.getContent().stream()
-                .map(this::buildTripResponse)
+                .map(trip -> {
+                    TripResponse res = tripMapper.toResponse(trip);
+                    List<TripMemberResponse> members = memberMap.getOrDefault(trip.getId(), List.of());
+                    res.setMembers(members);
+                    res.setMemberCount(members.size());
+                    
+                    // Gán Owner Id cho trip response
+                    members.stream()
+                            .filter(m -> "OWNER".equals(m.getRole()))
+                            .findFirst()
+                            .ifPresent(o -> res.setOwnerId(o.getId()));
+                            
+                    return res;
+                })
                 .toList();
 
         return PageResponse.<TripResponse>builder()
@@ -178,8 +227,20 @@ public class TripServiceImpl implements TripService {
         // validateOwner đã bao gồm check user có trong trip không
         validateOwner(tripId, userId);
 
-        if (tripMemberRepository.existsByTripIdAndUserId(tripId, targetUserId)) {
-            throw new BusinessException("User already in trip");
+        Optional<TripMember> existing = tripMemberRepository
+                .findByTripIdAndUserId(tripId, targetUserId);
+
+        if (existing.isPresent()) {
+            TripMember member = existing.get();
+            if (member.getIsActive()) {
+                throw new BusinessException("User already in trip");
+            }
+            // Reactivate
+            member.setIsActive(true);
+            member.setStatus(com.kaitohuy.chiabill.entity.MemberStatus.ACTIVE);
+            member.setRole("MEMBER");
+            tripMemberRepository.save(member);
+            return;
         }
 
         Trip trip = tripRepository.findById(tripId)
@@ -249,8 +310,20 @@ public class TripServiceImpl implements TripService {
         User targetUser = userRepository.findByEmailOrPhone(email, phone)
                 .orElseThrow(() -> new BusinessException("Người dùng không tồn tại trong hệ thống."));
 
-        if (tripMemberRepository.existsByTripIdAndUserId(tripId, targetUser.getId())) {
-             throw new BusinessException("Người dùng đã là thành viên của chuyến đi.");
+        Optional<TripMember> existing = tripMemberRepository
+                .findByTripIdAndUserId(tripId, targetUser.getId());
+
+        if (existing.isPresent()) {
+             TripMember member = existing.get();
+             if (member.getIsActive()) {
+                 throw new BusinessException("Người dùng đã là thành viên của chuyến đi.");
+             }
+             // Reactivate
+             member.setIsActive(true);
+             member.setStatus(com.kaitohuy.chiabill.entity.MemberStatus.ACTIVE);
+             member.setRole("MEMBER");
+             tripMemberRepository.save(member);
+             return;
         }
 
         Trip trip = tripRepository.findById(tripId)
@@ -303,6 +376,21 @@ public class TripServiceImpl implements TripService {
 
         if (Boolean.TRUE.equals(trip.getIsDeleted())) {
             throw new BusinessException("Trip has been deleted");
+        }
+
+        if (request.getCoverUrl() != null) {
+            String newCover = request.getCoverUrl().trim();
+            if (newCover.isEmpty()) {
+                if (trip.getCoverUrl() != null) {
+                    cloudinaryService.deleteImage(trip.getCoverUrl());
+                }
+                trip.setCoverUrl(null);
+            } else if (!newCover.equals(trip.getCoverUrl())) {
+                if (trip.getCoverUrl() != null) {
+                    cloudinaryService.deleteImage(trip.getCoverUrl());
+                }
+                trip.setCoverUrl(newCover);
+            }
         }
 
         trip.setName(request.getName());

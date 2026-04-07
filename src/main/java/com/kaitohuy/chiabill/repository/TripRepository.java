@@ -28,4 +28,6 @@ public interface TripRepository extends JpaRepository<Trip, Long>, JpaSpecificat
         WHERE t.id = :tripId
     """)
     Optional<Trip> findByIdWithCreator(@Param("tripId") Long tripId);
+
+    List<Trip> findByIsDeletedTrueAndUpdatedAtBefore(java.time.LocalDateTime threshold, org.springframework.data.domain.Pageable pageable);
 }

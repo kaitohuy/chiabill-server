@@ -56,4 +56,28 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
         ORDER BY SUM(e.totalAmount) DESC
     """)
     List<com.kaitohuy.chiabill.dto.response.CategoryStatResponse> getExpenseStatsByCategory(@Param("tripId") Long tripId);
+
+    @Modifying
+    @Query("DELETE FROM Expense e WHERE e.trip.id IN :tripIds")
+    void deleteByTripIdIn(@Param("tripIds") List<Long> tripIds);
+
+    @Query("SELECT e.receiptUrl FROM Expense e WHERE e.trip.id IN :tripIds AND e.receiptUrl IS NOT NULL")
+    java.util.List<String> findReceiptUrlsByTripIdIn(@Param("tripIds") java.util.List<Long> tripIds);
+
+    @Query("SELECT e.receiptUrl FROM Expense e WHERE e.isDeleted = true AND e.updatedAt < :threshold AND e.receiptUrl IS NOT NULL")
+    java.util.List<String> findReceiptUrlsByIsDeletedTrueAndUpdatedAtBefore(@Param("threshold") java.time.LocalDateTime threshold);
+
+    @Modifying
+    @Query("DELETE FROM Expense e WHERE e.isDeleted = true AND e.updatedAt < :threshold")
+    void deleteSoftDeletedExpenses(@Param("threshold") java.time.LocalDateTime threshold);
+
+    @Query("""
+        SELECT DISTINCT e FROM Expense e
+        LEFT JOIN FETCH e.payer
+        LEFT JOIN FETCH e.category
+        LEFT JOIN FETCH e.splits s
+        LEFT JOIN FETCH s.user
+        WHERE e.id IN :ids
+    """)
+    List<Expense> findAllByIdInWithPayerAndCategoryAndSplits(@Param("ids") List<Long> ids);
 }

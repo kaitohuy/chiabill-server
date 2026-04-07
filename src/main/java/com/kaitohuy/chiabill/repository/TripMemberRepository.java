@@ -42,4 +42,12 @@ public interface TripMemberRepository extends JpaRepository<TripMember, Long> {
     List<TripMember> findEnabledMembersWithUser(@org.springframework.data.repository.query.Param("tripId") Long tripId);
 
     boolean existsByTripIdAndUserIdAndRole(Long tripId, Long userId, String role);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM TripMember tm WHERE tm.trip.id IN :tripIds")
+    void deleteByTripIdIn(@org.springframework.data.repository.query.Param("tripIds") java.util.List<Long> tripIds);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM TripMember tm WHERE (tm.isActive = false OR tm.status = com.kaitohuy.chiabill.entity.MemberStatus.DISABLED) AND tm.updatedAt < :threshold")
+    void deleteInactiveMembers(@org.springframework.data.repository.query.Param("threshold") java.time.LocalDateTime threshold);
 }

@@ -19,4 +19,8 @@ public interface ExpenseSplitRepository extends JpaRepository<ExpenseSplit, Long
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("DELETE FROM ExpenseSplit e WHERE e.expense.id = :expenseId")
     void deleteByExpenseId(Long expenseId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM ExpenseSplit es WHERE es.expense.trip.id IN :tripIds")
+    void deleteByTripIdIn(@org.springframework.data.repository.query.Param("tripIds") java.util.List<Long> tripIds);
 }

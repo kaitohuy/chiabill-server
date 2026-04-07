@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import com.kaitohuy.chiabill.dto.response.PageResponse;
 import java.util.List;
 import java.util.Map;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import com.kaitohuy.chiabill.service.interfaces.ExportService;
 
 @RestController
 @RequestMapping("/api/trips")
@@ -20,6 +24,7 @@ import java.util.Map;
 public class TripController {
 
     private final TripService tripService;
+    private final ExportService exportService;
 
     @PostMapping
     public ApiResponse<TripResponse> createTrip(
@@ -180,5 +185,27 @@ public class TripController {
                 .success(true)
                 .message("Joined trip")
                 .build();
+    }
+
+    @GetMapping("/{tripId}/export/excel")
+    public ResponseEntity<byte[]> exportExcel(@PathVariable Long tripId, Authentication authentication) {
+        Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
+        byte[] data = exportService.exportTripToExcel(tripId, userId);
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=trip_report_" + tripId + ".xlsx")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(data);
+    }
+
+    @GetMapping("/{tripId}/export/pdf")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable Long tripId, Authentication authentication) {
+        Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
+        byte[] data = exportService.exportTripToPdf(tripId, userId);
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=trip_report_" + tripId + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(data);
     }
 }

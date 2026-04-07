@@ -6,13 +6,19 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "trip_members", uniqueConstraints = @UniqueConstraint(columnNames = {"trip_id", "user_id"}))
+@Table(name = "trip_members", uniqueConstraints = @UniqueConstraint(columnNames = {"trip_id", "user_id"}),
+    indexes = {
+        @Index(name = "idx_tripmember_trip", columnList = "trip_id"),
+        @Index(name = "idx_tripmember_user", columnList = "user_id"),
+        @Index(name = "idx_tripmember_status", columnList = "status"),
+        @Index(name = "idx_tripmember_active", columnList = "is_active")
+    })
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TripMember {
+public class TripMember extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

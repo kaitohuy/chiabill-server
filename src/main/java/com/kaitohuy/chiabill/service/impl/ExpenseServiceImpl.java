@@ -33,6 +33,7 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
     private final TripMemberRepository tripMemberRepository;
     private final ExpenseCategoryRepository categoryRepository;
     private final NotificationService notificationService;
+    private final com.kaitohuy.chiabill.service.interfaces.CloudinaryService cloudinaryService;
 
     private final ExpenseMapper expenseMapper;
 
@@ -91,6 +92,7 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
                 .description(request.getDescription())
                 .category(category)
                 .expenseDate(request.getExpenseDate())
+                .receiptUrl(request.getReceiptUrl())
                 .currency(trip.getCurrency())
                 .build();
 
@@ -160,8 +162,31 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
                 pageable
         );
 
-        // 3. Map to response
+        if (expensePage.isEmpty()) {
+            return PageResponse.<ExpenseResponse>builder()
+                    .content(List.of())
+                    .pageNumber(expensePage.getNumber())
+                    .pageSize(expensePage.getSize())
+                    .totalElements(expensePage.getTotalElements())
+                    .totalPages(expensePage.getTotalPages())
+                    .last(expensePage.isLast())
+                    .build();
+        }
+
+        // 3. Batch load full details for the page (Payer, Category, Splits)
+        List<Long> ids = expensePage.getContent().stream()
+                .map(Expense::getId)
+                .toList();
+        
+        List<Expense> detailedExpenses = expenseRepository.findAllByIdInWithPayerAndCategoryAndSplits(ids);
+        
+        Map<Long, Expense> detailedMap = detailedExpenses.stream()
+                .collect(Collectors.toMap(Expense::getId, e -> e));
+
+        // 4. Map to response preserving original order from expensePage
         List<ExpenseResponse> content = expensePage.getContent().stream()
+                .map(e -> detailedMap.get(e.getId()))
+                .filter(Objects::nonNull) // Safety check
                 .map(expenseMapper::toResponse)
                 .collect(Collectors.toList());
 
@@ -229,6 +254,22 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
                 .orElseThrow(() -> new BusinessException("Danh mục không tồn tại"));
 
         // Update basic info
+        // Handle receipt image deletion if updated
+        if (request.getReceiptUrl() != null) {
+            String newReceipt = request.getReceiptUrl().trim();
+            if (newReceipt.isEmpty()) {
+                if (expense.getReceiptUrl() != null) {
+                    cloudinaryService.deleteImage(expense.getReceiptUrl());
+                }
+                expense.setReceiptUrl(null);
+            } else if (!newReceipt.equals(expense.getReceiptUrl())) {
+                if (expense.getReceiptUrl() != null) {
+                    cloudinaryService.deleteImage(expense.getReceiptUrl());
+                }
+                expense.setReceiptUrl(newReceipt);
+            }
+        }
+
         expense.setTotalAmount(request.getTotalAmount());
         expense.setDescription(request.getDescription());
         expense.setCategory(newCategory);

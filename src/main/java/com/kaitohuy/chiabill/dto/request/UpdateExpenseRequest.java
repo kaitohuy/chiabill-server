@@ -26,6 +26,8 @@ public class UpdateExpenseRequest {
 
     @NotNull(message = "Expense date is required")
     private LocalDateTime expenseDate;
+    
+    private String receiptUrl;
 
     @NotEmpty(message = "Splits cannot be empty")
     @Valid
