@@ -12,6 +12,8 @@ import com.kaitohuy.chiabill.mapper.ExpenseMapper;
 import com.kaitohuy.chiabill.repository.*;
 import com.kaitohuy.chiabill.repository.specification.ExpenseSpecification;
 import com.kaitohuy.chiabill.service.interfaces.NotificationService;
+import com.kaitohuy.chiabill.utils.CurrencyUtil;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -119,7 +121,8 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
                     notificationService.sendNotification(
                             member.getUser(),
                             "Khoản chi mới: " + trip.getName(),
-                            payer.getName() + " vừa thêm " + expense.getTotalAmount() + " cho " + category.getName(),
+                            payer.getName() + " vừa thêm " + CurrencyUtil.format(expense.getTotalAmount()) + " cho " + category.getName(),
+
                             NotificationType.EXPENSE_CREATED,
                             trip.getId()
                     );

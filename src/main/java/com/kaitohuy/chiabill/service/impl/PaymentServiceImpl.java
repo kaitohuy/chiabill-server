@@ -9,6 +9,8 @@ import com.kaitohuy.chiabill.repository.*;
 import com.kaitohuy.chiabill.repository.specification.PaymentSpecification;
 import com.kaitohuy.chiabill.service.interfaces.CloudinaryService;
 import com.kaitohuy.chiabill.service.interfaces.NotificationService;
+import com.kaitohuy.chiabill.utils.CurrencyUtil;
+
 import com.kaitohuy.chiabill.service.interfaces.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -82,7 +84,8 @@ public class PaymentServiceImpl implements PaymentService {
             notificationService.sendNotification(
                     toUser,
                     "Bạn nhận được thanh toán: " + trip.getName(),
-                    fromUser.getName() + " đã gửi " + amount + " cho bạn. Trạng thái: " + initialStatus,
+                    fromUser.getName() + " đã gửi " + CurrencyUtil.format(amount) + " cho bạn. Trạng thái: " + initialStatus,
+
                     NotificationType.PAYMENT_REQUESTED,
                     trip.getId()
             );
@@ -112,7 +115,8 @@ public class PaymentServiceImpl implements PaymentService {
             notificationService.sendNotification(
                     payment.getFromUser(),
                     "Thanh toán được phê duyệt: " + payment.getTrip().getName(),
-                    payment.getToUser().getName() + " đã xác nhận nhận được số tiền " + payment.getAmount(),
+                    payment.getToUser().getName() + " đã xác nhận nhận được số tiền " + CurrencyUtil.format(payment.getAmount()),
+
                     NotificationType.PAYMENT_APPROVED,
                     payment.getTrip().getId()
             );
@@ -139,7 +143,8 @@ public class PaymentServiceImpl implements PaymentService {
             notificationService.sendNotification(
                     payment.getFromUser(),
                     "Thanh toán bị từ chối: " + payment.getTrip().getName(),
-                    payment.getToUser().getName() + " đã từ chối xác nhận số tiền " + payment.getAmount() + ". Vui lòng kiểm tra lại.",
+                    payment.getToUser().getName() + " đã từ chối xác nhận số tiền " + CurrencyUtil.format(payment.getAmount()) + ". Vui lòng kiểm tra lại.",
+
                     NotificationType.SYSTEM,
                     payment.getTrip().getId()
             );
