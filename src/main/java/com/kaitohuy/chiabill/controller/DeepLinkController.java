@@ -17,7 +17,22 @@ public class DeepLinkController {
 
     @GetMapping(value = "/join/{inviteCode}", produces = MediaType.TEXT_HTML_VALUE)
     public String joinTripLandingPage(@PathVariable String inviteCode) {
-        String intentUrl = "intent://chiabill-server.onrender.com/join/" + inviteCode + "#Intent;scheme=https;package=com.kaitohuy.chiabill;end";
+        String host = "chiabill-server.onrender.com";
+        try {
+            if (baseUrl != null && !baseUrl.isEmpty()) {
+                java.net.URI uri = new java.net.URI(baseUrl);
+                String extractedHost = uri.getHost();
+                if (extractedHost != null) {
+                    host = extractedHost;
+                } else {
+                    host = baseUrl.replace("https://", "").replace("http://", "").split("/")[0];
+                }
+            }
+        } catch (Exception e) {
+            // Fallback to default
+        }
+        
+        String intentUrl = "intent://" + host + "/join/" + inviteCode + "#Intent;scheme=https;package=com.kaitohuy.chiabill;end";
         try {
             org.springframework.core.io.ClassPathResource resource = new org.springframework.core.io.ClassPathResource("templates/deeplink.html");
             String html = new String(resource.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
