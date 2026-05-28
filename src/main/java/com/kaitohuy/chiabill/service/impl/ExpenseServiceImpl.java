@@ -36,26 +36,41 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
     private final ExpenseCategoryRepository categoryRepository;
     private final NotificationService notificationService;
     private final com.kaitohuy.chiabill.service.interfaces.CloudinaryService cloudinaryService;
+    private final com.kaitohuy.chiabill.service.interfaces.TripHistoryService tripHistoryService;
 
+    private final com.kaitohuy.chiabill.repository.GroupFundRepository fundRepository;
     private final ExpenseMapper expenseMapper;
 
     @Override
     @Transactional
-    public ExpenseResponse createExpense(CreateExpenseRequest request) {
-
-        if (request.getTotalAmount().compareTo(new BigDecimal("9999999999999")) > 0) {
+    public ExpenseResponse createExpense(Long actorId, CreateExpenseRequest request) {
+        if (request.getTotalAmount().compareTo(new java.math.BigDecimal("9999999999999")) > 0) {
             throw new BusinessException("Số tiền quá lớn, vui lòng kiểm tra lại");
         }
 
+        // Chống trùng lặp bằng clientUuid
+        if (request.getClientUuid() != null && !request.getClientUuid().trim().isEmpty()) {
+            java.util.Optional<Expense> existing = expenseRepository.findByClientUuid(request.getClientUuid());
+            if (existing.isPresent()) {
+                return expenseMapper.toResponse(existing.get());
+            }
+        }
+
+        // Validate trip exists
         Trip trip = tripRepository.findById(request.getTripId())
-                .orElseThrow(() -> new BusinessException("Trip not found"));
+                .orElseThrow(() -> new BusinessException("Chuyến đi không tồn tại"));
+
+        // Validate payer exists
+        User payer = userRepository.findById(request.getPayerId())
+                .orElseThrow(() -> new BusinessException("Người chi không tồn tại"));
+                
+        // Fetch actor
+        User actor = userRepository.findById(actorId)
+                .orElseThrow(() -> new BusinessException("Actor not found"));
 
         if (Boolean.TRUE.equals(trip.getIsDeleted())) {
             throw new BusinessException("Trip has been deleted");
         }
-
-        User payer = userRepository.findById(request.getPayerId())
-                .orElseThrow(() -> new BusinessException("Payer not found"));
 
         validateSplits(request);
 
@@ -87,6 +102,23 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
         ExpenseCategory category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new BusinessException("Danh mục không tồn tại"));
 
+        if (request.getExpenseDate() == null) {
+            request.setExpenseDate(java.time.LocalDateTime.now());
+        }
+
+        // Logic Quỹ chung
+        GroupFund targetFund = null;
+        boolean isFromFund = Boolean.TRUE.equals(request.getIsFromFund());
+        if (isFromFund) {
+            targetFund = fundRepository.findByTripIdAndIsDeletedFalse(trip.getId())
+                    .orElseThrow(() -> new BusinessException("Quỹ chung chưa được kích hoạt cho chuyến đi này."));
+            if (targetFund.getBalance().compareTo(request.getTotalAmount()) < 0) {
+                throw new BusinessException("Số dư quỹ chung không đủ để thực hiện thanh toán này (Số dư quỹ hiện tại: " + targetFund.getBalance() + ").");
+            }
+            targetFund.setBalance(targetFund.getBalance().subtract(request.getTotalAmount()));
+            fundRepository.save(targetFund);
+        }
+
         Expense expense = Expense.builder()
                 .trip(trip)
                 .payer(payer)
@@ -95,7 +127,12 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
                 .category(category)
                 .expenseDate(request.getExpenseDate())
                 .receiptUrl(request.getReceiptUrl())
-                .currency(trip.getCurrency())
+                .currency(request.getCurrency() != null ? request.getCurrency() : trip.getCurrency())
+                .exchangeRate(request.getExchangeRate() != null ? request.getExchangeRate() : BigDecimal.ONE)
+                .isFromFund(isFromFund)
+                .groupFund(targetFund)
+                .clientUuid(request.getClientUuid())
+                .splitType(request.getSplitType() != null ? request.getSplitType() : "EQUAL")
                 .build();
 
         expenseRepository.save(expense);
@@ -105,6 +142,7 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
                         .expense(expense)
                         .user(userMap.get(req.getUserId()))
                         .amount(req.getAmount())
+                        .splitValue(req.getSplitValue())
                         .build()
                 )
                 .toList();
@@ -131,6 +169,9 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
         } catch (Exception e) {
             // Không để lỗi gửi thông báo làm hỏng transaction chính của Expense
         }
+
+        // 🚀 Log activity
+        tripHistoryService.logAddExpense(actor, expense);
 
         return expenseMapper.toResponse(expense);
     }
@@ -222,6 +263,18 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
         Trip trip = expense.getTrip();
         validateOwnerOrPayer(trip.getId(), userId, expense.getPayer().getId());
 
+        User actor = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("Actor not found"));
+
+        // Capture OLD state for logging
+        Expense oldState = Expense.builder()
+                .totalAmount(expense.getTotalAmount())
+                .category(expense.getCategory())
+                .description(expense.getDescription())
+                .payer(expense.getPayer())
+                .trip(expense.getTrip())
+                .build();
+
         User newPayer = userRepository.findById(request.getPayerId())
                 .orElseThrow(() -> new BusinessException("Payer not found"));
 
@@ -278,6 +331,15 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
         expense.setCategory(newCategory);
         expense.setExpenseDate(request.getExpenseDate());
         expense.setPayer(newPayer);
+        if (request.getCurrency() != null) {
+            expense.setCurrency(request.getCurrency());
+        }
+        if (request.getExchangeRate() != null) {
+            expense.setExchangeRate(request.getExchangeRate());
+        }
+        if (request.getSplitType() != null) {
+            expense.setSplitType(request.getSplitType());
+        }
 
         expenseRepository.save(expense);
 
@@ -290,12 +352,16 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
                         .expense(expense)
                         .user(userMap.get(req.getUserId()))
                         .amount(req.getAmount())
+                        .splitValue(req.getSplitValue())
                         .build()
                 )
                 .toList();
 
         splitRepository.saveAll(newSplits);
         expense.setSplits(newSplits);
+
+        // 🚀 Log activity
+        tripHistoryService.logEditExpense(actor, oldState, expense);
 
         return expenseMapper.toResponse(expense);
     }
@@ -313,18 +379,24 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
 
         validateOwnerOrPayer(expense.getTrip().getId(), userId, expense.getPayer().getId());
 
+        User actor = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("Actor not found"));
+
         expense.setIsDeleted(true);
         expenseRepository.save(expense);
+
+        // 🚀 Log activity
+        tripHistoryService.logDeleteExpense(actor, expense);
     }
 
     private void validateOwnerOrPayer(Long tripId, Long callerId, Long payerId) {
         if (callerId.equals(payerId)) return;
 
         TripMember caller = tripMemberRepository.findByTripIdAndUserId(tripId, callerId)
-                .orElseThrow(() -> new BusinessException("You are not in this trip"));
+                .orElseThrow(() -> new BusinessException("Bạn không phải thành viên của chuyến đi này"));
         
         if (!"OWNER".equals(caller.getRole())) {
-            throw new BusinessException("Only trip OWNER or expense payer can do this");
+            throw new BusinessException("Chỉ chủ nhóm hoặc người tạo chi phí mới được phép thao tác");
         }
     }
 
@@ -389,5 +461,15 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
 
         // 2. Query stats from repository
         return expenseRepository.getExpenseStatsByCategory(tripId);
+    }
+
+    @Override
+    public List<com.kaitohuy.chiabill.dto.response.TripStatResponse> getOverallExpenseStats(Long userId, Integer month, Integer year) {
+        return expenseRepository.getOverallExpenseStats(userId, month, year);
+    }
+
+    @Override
+    public java.math.BigDecimal getLatestExchangeRate(String currency) {
+        return expenseRepository.findLatestExchangeRateByCurrency(currency);
     }
 }

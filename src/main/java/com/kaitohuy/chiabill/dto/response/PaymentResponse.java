@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -19,4 +20,6 @@ public class PaymentResponse {
     private String proofUrl;
     private PaymentStatus status;
     private LocalDateTime createdAt;
+    private List<Long> onBehalfOfUserIds;     // null = tự trả
+    private List<String> onBehalfOfUserNames; // null = tự trả
 }

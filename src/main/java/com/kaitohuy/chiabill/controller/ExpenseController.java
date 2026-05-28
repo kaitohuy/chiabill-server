@@ -7,6 +7,9 @@ import com.kaitohuy.chiabill.security.UserPrincipal;
 import com.kaitohuy.chiabill.service.interfaces.ExpenseService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,11 +23,15 @@ public class ExpenseController {
     private final ExpenseService expenseService;
 
     @PostMapping
-    public ApiResponse<ExpenseResponse> createExpense(@RequestBody CreateExpenseRequest request) {
+    public ApiResponse<ExpenseResponse> createExpense(
+            @RequestBody CreateExpenseRequest request,
+            Authentication authentication) {
+
+        Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
 
         return ApiResponse.<ExpenseResponse>builder()
                 .success(true)
-                .data(expenseService.createExpense(request))
+                .data(expenseService.createExpense(userId, request))
                 .build();
     }
 
@@ -45,7 +52,7 @@ public class ExpenseController {
     public ApiResponse<com.kaitohuy.chiabill.dto.response.PageResponse<ExpenseResponse>> searchExpenses(
             @PathVariable Long tripId,
             com.kaitohuy.chiabill.dto.request.SearchExpenseRequest request,
-            org.springframework.data.domain.Pageable pageable,
+            @PageableDefault(sort = "expenseDate", direction = Direction.DESC) Pageable pageable,
             Authentication authentication) {
 
         Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
@@ -94,6 +101,30 @@ public class ExpenseController {
         return ApiResponse.<List<com.kaitohuy.chiabill.dto.response.CategoryStatResponse>>builder()
                 .success(true)
                 .data(expenseService.getExpenseStats(tripId, userId))
+                .build();
+    }
+
+    @GetMapping("/overall-stats")
+    public ApiResponse<List<com.kaitohuy.chiabill.dto.response.TripStatResponse>> getOverallStats(
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year,
+            Authentication authentication) {
+
+        Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
+
+        return ApiResponse.<List<com.kaitohuy.chiabill.dto.response.TripStatResponse>>builder()
+                .success(true)
+                .data(expenseService.getOverallExpenseStats(userId, month, year))
+                .build();
+    }
+
+    @GetMapping("/exchange-rate")
+    public ApiResponse<java.math.BigDecimal> getExchangeRate(
+            @RequestParam String currency) {
+        
+        return ApiResponse.<java.math.BigDecimal>builder()
+                .success(true)
+                .data(expenseService.getLatestExchangeRate(currency))
                 .build();
     }
 }

@@ -29,8 +29,8 @@ public class GlobalExceptionHandler {
                 .getFieldErrors()
                 .stream()
                 .findFirst()
-                .map(e -> e.getField() + " " + e.getDefaultMessage())
-                .orElse("Invalid request");
+                .map(e -> "Dữ liệu không hợp lệ")
+                .orElse("Yêu cầu không hợp lệ");
 
         log.warn("Validation Error: {}", message);
 
@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 ApiResponse.builder()
                         .success(false)
-                        .message(ex.getMessage() != null ? ex.getMessage() : "Internal server error")
+                        .message("Đã có lỗi xảy ra trên hệ thống")
                         .build()
         );
     }

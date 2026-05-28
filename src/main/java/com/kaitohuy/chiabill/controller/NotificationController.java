@@ -65,4 +65,15 @@ public class NotificationController {
                 .data(notificationService.getUnreadCount(userId))
                 .build();
     }
+
+    @PutMapping("/mark-all-read")
+    public ApiResponse<?> markAllAsRead(Authentication authentication) {
+        Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
+        notificationService.markAllAsRead(userId);
+        return ApiResponse.builder()
+                .success(true)
+                .message("All notifications marked as read")
+                .build();
+    }
+
 }

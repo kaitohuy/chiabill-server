@@ -34,6 +34,11 @@ public class Payment extends BaseEntity {
     @JoinColumn(name = "to_user_id", nullable = false)
     private User toUser;
 
+    // Người thực hiện thanh toán hộ (null = tự trả, not null = người được trả hộ)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "on_behalf_of_user_id")
+    private User onBehalfOfUser;
+
     @Column(nullable = false)
     private BigDecimal amount;
 

@@ -40,6 +40,8 @@ public class TripServiceImpl implements TripService {
     private final EmailService emailService;
     private final SettlementService settlementService;
     private final PaymentService paymentService;
+    private final com.kaitohuy.chiabill.repository.PaymentRepository paymentRepository;
+    private final com.kaitohuy.chiabill.service.interfaces.TripHistoryService tripHistoryService;
 
     private final ExpenseRepository expenseRepository;
     private final ExpenseSplitRepository expenseSplitRepository;
@@ -65,6 +67,9 @@ public class TripServiceImpl implements TripService {
                 .description(request.getDescription())
                 .coverUrl(request.getCoverUrl())
                 .totalBudget(request.getTotalBudget())
+                .startDate(request.getStartDate())
+                .categoryName(request.getCategoryName())
+                .categoryIcon(request.getCategoryIcon())
                 .createdBy(creator)
                 .build();
 
@@ -111,6 +116,13 @@ public class TripServiceImpl implements TripService {
                                         .avatarUrl(tm.getUser().getAvatarUrl())
                                         .role(tm.getRole())
                                         .status(tm.getStatus().name())
+                                        .isGhost(tm.getUser().getIsGhost())
+                                        .bankId(tm.getUser().getBankId())
+                                        .accountNo(tm.getUser().getAccountNo())
+                                        .paymentPriority(tm.getUser().getPaymentPriority())
+                                        .bankQrUrl(tm.getUser().getBankQrUrl())
+                                        .email(tm.getUser().getEmail())
+                                        .phone(tm.getUser().getPhone())
                                         .build(),
                                 Collectors.toList()
                         )
@@ -135,10 +147,10 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
-    public PageResponse<TripResponse> getMyTripsPaginated(Long userId, String keyword, Pageable pageable) {
+    public PageResponse<TripResponse> getMyTripsPaginated(Long userId, String keyword, Integer month, Integer year, Pageable pageable) {
         // 1. Query dữ liệu với specification
         Page<Trip> tripPage = tripRepository.findAll(
-                TripSpecification.filter(userId, keyword),
+                TripSpecification.filter(userId, keyword, month, year),
                 pageable
         );
 
@@ -240,6 +252,9 @@ public class TripServiceImpl implements TripService {
             member.setStatus(com.kaitohuy.chiabill.entity.MemberStatus.ACTIVE);
             member.setRole("MEMBER");
             tripMemberRepository.save(member);
+            
+            User actor = userRepository.findById(userId).orElseThrow();
+            tripHistoryService.logAddMember(actor, member.getTrip(), member.getUser());
             return;
         }
 
@@ -256,6 +271,52 @@ public class TripServiceImpl implements TripService {
                 .build();
 
         tripMemberRepository.save(member);
+        
+        User actor = userRepository.findById(userId).orElseThrow();
+        tripHistoryService.logAddMember(actor, trip, user);
+    }
+
+    // =========================
+    // IMPORT MEMBERS
+    // =========================
+    @Override
+    @Transactional
+    public void importMembers(Long tripId, Long ownerId, com.kaitohuy.chiabill.dto.request.ImportMembersRequest request) {
+        validateOwner(tripId, ownerId);
+
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new BusinessException("Trip not found"));
+
+        User actor = userRepository.findById(ownerId)
+                .orElseThrow(() -> new BusinessException("Actor not found"));
+
+        for (Long targetUserId : request.getUserIds()) {
+            Optional<TripMember> existing = tripMemberRepository.findByTripIdAndUserId(tripId, targetUserId);
+
+            if (existing.isPresent()) {
+                TripMember member = existing.get();
+                if (!member.getIsActive()) {
+                    member.setIsActive(true);
+                    member.setStatus(com.kaitohuy.chiabill.entity.MemberStatus.ACTIVE);
+                    member.setRole("MEMBER");
+                    tripMemberRepository.save(member);
+                    tripHistoryService.logAddMember(actor, trip, member.getUser());
+                }
+                continue;
+            }
+
+            User targetUser = userRepository.findById(targetUserId).orElse(null);
+            if (targetUser != null) {
+                TripMember newMember = TripMember.builder()
+                        .trip(trip)
+                        .user(targetUser)
+                        .role("MEMBER")
+                        .build();
+
+                tripMemberRepository.save(newMember);
+                tripHistoryService.logAddMember(actor, trip, targetUser);
+            }
+        }
     }
 
     // =========================
@@ -290,6 +351,9 @@ public class TripServiceImpl implements TripService {
                 .build();
 
         tripMemberRepository.save(member);
+        
+        // Log user joined
+        tripHistoryService.logAddMember(user, trip, user);
     }
 
     // =========================
@@ -396,6 +460,9 @@ public class TripServiceImpl implements TripService {
         trip.setName(request.getName());
         trip.setDescription(request.getDescription());
         trip.setTotalBudget(request.getTotalBudget());
+        trip.setStartDate(request.getStartDate());
+        trip.setCategoryName(request.getCategoryName());
+        trip.setCategoryIcon(request.getCategoryIcon());
 
         tripRepository.save(trip);
 
@@ -420,6 +487,59 @@ public class TripServiceImpl implements TripService {
 
         trip.setIsDeleted(true);
         tripRepository.save(trip);
+    }
+
+    @Override
+    public List<TripResponse> getDeletedTrips(Long userId) {
+        List<Trip> deletedTrips = tripRepository.findDeletedTripsByOwnerId(userId);
+        return deletedTrips.stream()
+                .map(this::buildTripResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void restoreTrip(Long tripId, Long userId) {
+        validateOwner(tripId, userId);
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new BusinessException("Trip not found"));
+
+        if (!Boolean.TRUE.equals(trip.getIsDeleted())) {
+            return;
+        }
+
+        trip.setIsDeleted(false);
+        tripRepository.save(trip);
+    }
+
+    @Override
+    @Transactional
+    public void forceDeleteTrip(Long tripId, Long userId) {
+        validateOwner(tripId, userId);
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new BusinessException("Trip not found"));
+
+        if (!Boolean.TRUE.equals(trip.getIsDeleted())) {
+            throw new BusinessException("Chuyến đi chưa được chuyển vào thùng rác. Không thể xóa vĩnh viễn.");
+        }
+
+        List<Long> tripIds = java.util.List.of(tripId);
+
+        // 1. Xóa các tệp ảnh liên quan trên Cloudinary (Receipts & Covers)
+        List<String> receiptUrls = expenseRepository.findReceiptUrlsByTripIdIn(tripIds);
+        receiptUrls.forEach(cloudinaryService::deleteImage);
+        
+        if (trip.getCoverUrl() != null) {
+            cloudinaryService.deleteImage(trip.getCoverUrl());
+        }
+
+        // Xóa theo thứ tự để tránh lỗi khóa ngoại (Foreign Key)
+        expenseSplitRepository.deleteByTripIdIn(tripIds);
+        expenseRepository.deleteByTripIdIn(tripIds);
+        paymentRepository.deleteByTripIdIn(tripIds);
+        invitationRepository.deleteByTripIdIn(tripIds);
+        tripMemberRepository.deleteByTripIdIn(tripIds);
+        tripRepository.deleteById(tripId);
     }
 
     @Override
@@ -455,6 +575,8 @@ public class TripServiceImpl implements TripService {
         member.setIsActive(false);
         member.setStatus(com.kaitohuy.chiabill.entity.MemberStatus.DISABLED);
         tripMemberRepository.save(member);
+        
+        tripHistoryService.logRemoveMember(member.getUser(), member.getTrip(), member.getUser());
     }
 
     @Override
@@ -488,6 +610,9 @@ public class TripServiceImpl implements TripService {
 
         member.setStatus(com.kaitohuy.chiabill.entity.MemberStatus.DISABLED);
         tripMemberRepository.save(member);
+        
+        User actor = userRepository.findById(moderatorId).orElseThrow();
+        tripHistoryService.logRemoveMember(actor, member.getTrip(), member.getUser());
     }
 
     @Override
@@ -582,15 +707,18 @@ public class TripServiceImpl implements TripService {
     // =========================
 
     private void validateUserInTrip(Long tripId, Long userId) {
-        boolean exists = tripMemberRepository.existsByTripIdAndUserId(tripId, userId);
-        if (!exists) {
-            throw new BusinessException("User not in trip");
+        TripMember member = tripMemberRepository.findByTripIdAndUserId(tripId, userId)
+                .orElseThrow(() -> new BusinessException("User not in trip"));
+        
+        if (!Boolean.TRUE.equals(member.getIsActive())) {
+            throw new BusinessException("Bạn đã rời khỏi chuyến đi này và không thể xem chi tiết.");
         }
     }
 
     private TripResponse buildTripResponse(Trip trip) {
         TripResponse res = tripMapper.toResponse(trip);
         res.setCreatedAt(trip.getCreatedAt()); // Đảm bảo lấy từ BaseEntity
+        res.setStartDate(trip.getStartDate());
         
         List<TripMember> members = tripMemberRepository.findActiveMembersWithUser(trip.getId());
 
@@ -606,6 +734,13 @@ public class TripServiceImpl implements TripService {
                             .avatarUrl(tm.getUser().getAvatarUrl())
                             .role(tm.getRole())
                             .status(tm.getStatus().name())
+                            .isGhost(tm.getUser().getIsGhost())
+                            .bankId(tm.getUser().getBankId())
+                            .accountNo(tm.getUser().getAccountNo())
+                            .paymentPriority(tm.getUser().getPaymentPriority())
+                            .bankQrUrl(tm.getUser().getBankQrUrl())
+                            .email(tm.getUser().getEmail())
+                            .phone(tm.getUser().getPhone())
                             .build();
                 })
                 .toList();
@@ -626,7 +761,7 @@ public class TripServiceImpl implements TripService {
         }
 
         if (!"OWNER".equals(member.getRole())) {
-            throw new BusinessException("Permission denied");
+            throw new BusinessException("Chỉ chủ nhóm mới được phép thực hiện thao tác này");
         }
     }
 }

@@ -40,4 +40,18 @@ public class SettlementController {
                 .data(settlementService.calculateSettlement(tripId, userId))
                 .build();
     }
+
+    @GetMapping("/trip/{tripId}/balance/{targetUserId}")
+    public ApiResponse<com.kaitohuy.chiabill.dto.response.PersonalStatementResponse> getPersonalStatement(
+            @PathVariable Long tripId,
+            @PathVariable Long targetUserId,
+            Authentication authentication) {
+
+        Long actorId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
+
+        return ApiResponse.<com.kaitohuy.chiabill.dto.response.PersonalStatementResponse>builder()
+                .success(true)
+                .data(settlementService.getPersonalStatement(tripId, actorId, targetUserId))
+                .build();
+    }
 }

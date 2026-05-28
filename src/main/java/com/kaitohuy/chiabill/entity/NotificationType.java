@@ -6,5 +6,6 @@ public enum NotificationType {
     PAYMENT_APPROVED,
     TRIP_INVITE,
     MEMBER_KICKED,
-    SYSTEM
+    SYSTEM,
+    SETTLEMENT_CREATED
 }

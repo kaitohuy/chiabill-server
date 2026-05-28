@@ -20,7 +20,10 @@ public class TripResponse {
     private String coverUrl;
     private BigDecimal totalBudget;
     private Long ownerId;
+    private java.time.LocalDateTime startDate;
     private LocalDateTime createdAt;
     private List<TripMemberResponse> members;
     private Integer memberCount;
+    private String categoryName;
+    private String categoryIcon;
 }

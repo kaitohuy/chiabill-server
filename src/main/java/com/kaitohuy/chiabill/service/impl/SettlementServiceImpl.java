@@ -1,5 +1,7 @@
 package com.kaitohuy.chiabill.service.impl;
 
+import com.kaitohuy.chiabill.dto.response.ExpenseResponse;
+import com.kaitohuy.chiabill.dto.response.PersonalStatementResponse;
 import com.kaitohuy.chiabill.dto.response.SettlementResponse;
 import com.kaitohuy.chiabill.dto.response.SettlementSummaryResponse;
 import com.kaitohuy.chiabill.entity.Expense;
@@ -11,7 +13,9 @@ import com.kaitohuy.chiabill.exception.BusinessException;
 import com.kaitohuy.chiabill.repository.ExpenseRepository;
 import com.kaitohuy.chiabill.repository.PaymentRepository;
 import com.kaitohuy.chiabill.repository.TripMemberRepository;
+import com.kaitohuy.chiabill.repository.UserRepository;
 import com.kaitohuy.chiabill.service.interfaces.SettlementService;
+import com.kaitohuy.chiabill.mapper.ExpenseMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +31,8 @@ public class SettlementServiceImpl implements SettlementService {
     private final ExpenseRepository expenseRepository;
     private final PaymentRepository paymentRepository;
     private final TripMemberRepository tripMemberRepository;
+    private final UserRepository userRepository;
+    private final ExpenseMapper expenseMapper;
 
     @Override
     public List<SettlementResponse> calculateSettlement(Long tripId, Long userId) {
@@ -39,7 +45,9 @@ public class SettlementServiceImpl implements SettlementService {
 
         // 2. Lấy toàn bộ dữ liệu & Tính Net Balance
         List<TripMember> members = tripMemberRepository.findByTripId(tripId);
-        Map<Long, BigDecimal> netBalances = calculateNetBalances(tripId, members);
+        List<Expense> expenses = expenseRepository.fetchAllDataForSettlement(tripId);
+        List<Payment> payments = paymentRepository.findByTripIdAndStatus(tripId, PaymentStatus.APPROVED);
+        Map<Long, BigDecimal> netBalances = calculateNetBalances(members, expenses, payments);
 
         // Map để lưu trữ thông tin cơ bản
         Map<Long, String> nameMap = new HashMap<>();
@@ -100,16 +108,106 @@ public class SettlementServiceImpl implements SettlementService {
     }
 
     @Override
+    public PersonalStatementResponse getPersonalStatement(Long tripId, Long actorId, Long targetUserId) {
+        // 1. Kiểm tra actor có trong trip không
+        boolean isMember = tripMemberRepository.existsByTripIdAndUserId(tripId, actorId);
+        if (!isMember) {
+            throw new BusinessException("Access denied: not a member of this trip");
+        }
+
+        // 2. Fetch data
+        List<Expense> expenses = expenseRepository.fetchAllDataForSettlement(tripId);
+        List<Payment> payments = paymentRepository.findByTripIdAndStatus(tripId, PaymentStatus.APPROVED);
+
+        BigDecimal totalSpent = BigDecimal.ZERO;
+        BigDecimal totalPaid = BigDecimal.ZERO;
+        List<ExpenseResponse> involvedExpenses = new ArrayList<>();
+
+        for (Expense expense : expenses) {
+            if (Boolean.TRUE.equals(expense.getIsFromFund())) {
+                continue; // Bỏ qua chi tiêu từ Quỹ chung
+            }
+
+            boolean isInvolved = false;
+            
+            // Tính số tiền đã trả cho expense này
+            if (expense.getPayer().getId().equals(targetUserId)) {
+                totalPaid = totalPaid.add(expense.getTotalAmount());
+                isInvolved = true;
+            }
+
+            // Tính số tiền đã tiêu (phần mình chịu) trong expense này
+            for (ExpenseSplit split : expense.getSplits()) {
+                if (split.getUser().getId().equals(targetUserId)) {
+                    totalSpent = totalSpent.add(split.getAmount());
+                    isInvolved = true;
+                }
+            }
+
+            if (isInvolved) {
+                involvedExpenses.add(expenseMapper.toResponse(expense));
+            }
+        }
+
+        // 3. Tính cả phần Payment (thanh toán nợ)
+        for (Payment payment : payments) {
+            if (payment.getFromUser().getId().equals(targetUserId)) {
+                totalPaid = totalPaid.add(payment.getAmount());
+            } else if (payment.getToUser().getId().equals(targetUserId)) {
+                totalSpent = totalSpent.add(payment.getAmount());
+            }
+        }
+
+        BigDecimal netBalance = totalPaid.subtract(totalSpent);
+        String targetUserName = userRepository.findById(targetUserId).map(com.kaitohuy.chiabill.entity.User::getName).orElse("Unknown");
+
+        return PersonalStatementResponse.builder()
+                .userId(targetUserId)
+                .userName(targetUserName)
+                .totalPaid(totalPaid.setScale(2, RoundingMode.HALF_UP))
+                .totalSpent(totalSpent.setScale(2, RoundingMode.HALF_UP))
+                .netBalance(netBalance.setScale(2, RoundingMode.HALF_UP))
+                .involvedExpenses(involvedExpenses)
+                .build();
+    }
+
+    @Override
     public SettlementSummaryResponse getSettlementSummary(Long userId) {
         List<TripMember> memberships = tripMemberRepository.findByUserIdAndIsActiveTrue(userId);
 
         BigDecimal totalOwed = BigDecimal.ZERO;
         BigDecimal totalReceivable = BigDecimal.ZERO;
 
-        for (TripMember member : memberships) {
-            Long tripId = member.getTrip().getId();
-            List<TripMember> allTripMembers = tripMemberRepository.findByTripId(tripId);
-            Map<Long, BigDecimal> balances = calculateNetBalances(tripId, allTripMembers);
+        if (memberships.isEmpty()) {
+            return SettlementSummaryResponse.builder()
+                    .totalOwed(totalOwed)
+                    .totalReceivable(totalReceivable)
+                    .build();
+        }
+
+        List<Long> tripIds = memberships.stream()
+                .map(m -> m.getTrip().getId())
+                .collect(Collectors.toList());
+
+        // Batch Fetch Data
+        List<TripMember> allTripMembers = tripMemberRepository.findByTripIdIn(tripIds);
+        List<Expense> allExpenses = expenseRepository.fetchAllDataForSettlementIn(tripIds);
+        List<Payment> allPayments = paymentRepository.findByTripIdInAndStatus(tripIds, PaymentStatus.APPROVED);
+
+        // Group Data By tripId in-memory
+        Map<Long, List<TripMember>> membersByTrip = allTripMembers.stream()
+                .collect(Collectors.groupingBy(m -> m.getTrip().getId()));
+        Map<Long, List<Expense>> expensesByTrip = allExpenses.stream()
+                .collect(Collectors.groupingBy(e -> e.getTrip().getId()));
+        Map<Long, List<Payment>> paymentsByTrip = allPayments.stream()
+                .collect(Collectors.groupingBy(p -> p.getTrip().getId()));
+
+        for (Long tripId : tripIds) {
+            List<TripMember> members = membersByTrip.getOrDefault(tripId, Collections.emptyList());
+            List<Expense> expenses = expensesByTrip.getOrDefault(tripId, Collections.emptyList());
+            List<Payment> payments = paymentsByTrip.getOrDefault(tripId, Collections.emptyList());
+
+            Map<Long, BigDecimal> balances = calculateNetBalances(members, expenses, payments);
 
             BigDecimal userBalance = balances.getOrDefault(userId, BigDecimal.ZERO);
 
@@ -126,9 +224,7 @@ public class SettlementServiceImpl implements SettlementService {
                 .build();
     }
 
-    private Map<Long, BigDecimal> calculateNetBalances(Long tripId, List<TripMember> members) {
-        List<Expense> expenses = expenseRepository.fetchAllDataForSettlement(tripId);
-        List<Payment> payments = paymentRepository.findByTripIdAndStatus(tripId, PaymentStatus.APPROVED);
+    private Map<Long, BigDecimal> calculateNetBalances(List<TripMember> members, List<Expense> expenses, List<Payment> payments) {
 
         Map<Long, BigDecimal> netBalances = new HashMap<>();
         for (TripMember member : members) {
@@ -137,6 +233,9 @@ public class SettlementServiceImpl implements SettlementService {
 
         // Processing Expenses
         for (Expense expense : expenses) {
+            if (Boolean.TRUE.equals(expense.getIsFromFund())) {
+                continue; // Bỏ qua chi tiêu từ Quỹ chung
+            }
             Long payerId = expense.getPayer().getId();
             for (ExpenseSplit split : expense.getSplits()) {
                 Long debtorId = split.getUser().getId();

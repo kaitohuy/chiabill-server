@@ -11,4 +11,11 @@ public class TripMemberResponse {
     private String avatarUrl;
     private String role;
     private String status;
+    private Boolean isGhost;
+    private String bankId;
+    private String accountNo;
+    private Integer paymentPriority;
+    private String bankQrUrl;
+    private String email;
+    private String phone;
 }

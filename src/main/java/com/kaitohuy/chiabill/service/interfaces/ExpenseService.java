@@ -7,11 +7,12 @@ import com.kaitohuy.chiabill.dto.response.ExpenseResponse;
 import com.kaitohuy.chiabill.dto.response.PageResponse;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface ExpenseService {
 
-    ExpenseResponse createExpense(CreateExpenseRequest request);
+    ExpenseResponse createExpense(Long actorId, CreateExpenseRequest request);
 
     List<ExpenseResponse> getExpensesByTrip(Long tripId, Long userId);
 
@@ -22,4 +23,8 @@ public interface ExpenseService {
     void deleteExpense(Long expenseId, Long userId);
 
     List<CategoryStatResponse> getExpenseStats(Long tripId, Long userId);
+
+    List<com.kaitohuy.chiabill.dto.response.TripStatResponse> getOverallExpenseStats(Long userId, Integer month, Integer year);
+
+    BigDecimal getLatestExchangeRate(String currency);
 }

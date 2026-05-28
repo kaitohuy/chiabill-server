@@ -26,9 +26,17 @@ public class Trip extends BaseEntity {
     private String description;
 
     private String coverUrl;
+    
+    @Column(name = "category_name")
+    private String categoryName;
+
+    @Column(name = "category_icon")
+    private String categoryIcon;
 
     @Column(precision = 15, scale = 2)
     private BigDecimal totalBudget;
+
+    private java.time.LocalDateTime startDate;
 
     @Column(nullable = false)
     @Builder.Default

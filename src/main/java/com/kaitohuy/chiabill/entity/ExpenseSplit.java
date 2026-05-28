@@ -38,6 +38,9 @@ public class ExpenseSplit {
     @Column(precision = 5, scale = 2)
     private BigDecimal percentage;
 
+    @Column(precision = 15, scale = 2)
+    private BigDecimal splitValue;
+
     @Builder.Default
     @Column(nullable = false)
     private Boolean isSettled = false;

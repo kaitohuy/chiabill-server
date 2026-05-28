@@ -9,4 +9,5 @@ public class SplitResponse {
     private Long userId;
     private String userName;
     private BigDecimal amount;
+    private BigDecimal splitValue;
 }

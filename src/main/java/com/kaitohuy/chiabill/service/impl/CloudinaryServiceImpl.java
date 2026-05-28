@@ -37,8 +37,11 @@ public class CloudinaryServiceImpl implements CloudinaryService {
                     ));
             return uploadResult.get("secure_url").toString();
         } catch (IOException e) {
-            log.error("Error uploading file to Cloudinary: ", e);
-            throw new BusinessException("Could not upload image to Cloudinary");
+            log.error("IO Error uploading file to Cloudinary: ", e);
+            throw new BusinessException("Lỗi đọc dữ liệu hình ảnh. Vui lòng thử lại.");
+        } catch (Exception e) {
+            log.error("Cloudinary Library Error: ", e);
+            throw new BusinessException("Lỗi tải ảnh lên hệ thống lưu trữ. Vui lòng kiểm tra lại cấu hình Cloudinary.");
         }
     }
 

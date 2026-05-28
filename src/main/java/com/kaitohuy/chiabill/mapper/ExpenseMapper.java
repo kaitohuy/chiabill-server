@@ -10,6 +10,7 @@ public interface ExpenseMapper {
     @Mapping(source = "payer", target = "payer")
     @Mapping(source = "trip.id", target = "tripId")
     @Mapping(source = "currency", target = "currency")
+    @Mapping(source = "exchangeRate", target = "exchangeRate")
     @Mapping(source = "category.id", target = "categoryId")
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "category.icon", target = "categoryIcon")

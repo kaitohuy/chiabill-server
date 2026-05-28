@@ -13,4 +13,5 @@ WORKDIR /app
 # Copy file jar từ build stage sang
 COPY --from=build /app/build/libs/chia-bill-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar app.jar"]
+#-Xms200m -Xmx300m -XX:+UseSerialGC -XX:MaxMetaspaceSize=80m

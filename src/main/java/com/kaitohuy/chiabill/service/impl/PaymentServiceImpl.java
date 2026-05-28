@@ -32,6 +32,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final TripMemberRepository tripMemberRepository;
     private final CloudinaryService cloudinaryService;
     private final NotificationService notificationService;
+    private final com.kaitohuy.chiabill.service.interfaces.TripHistoryService tripHistoryService;
     private final PaymentMapper paymentMapper;
 
     @Override
@@ -59,8 +60,8 @@ public class PaymentServiceImpl implements PaymentService {
         User toUser = userRepository.findById(toUserId)
                 .orElseThrow(() -> new BusinessException("User not found"));
 
-        // Upload minh chứng lên Cloudinary
-        String proofUrl = cloudinaryService.uploadImage(proof);
+        // Upload minh chứng lên Cloudinary (nếu có)
+        String proofUrl = (proof != null && !proof.isEmpty()) ? cloudinaryService.uploadImage(proof) : null;
 
         // Xác định trạng thái ban đầu dựa trên cấu hình của người nhận
         PaymentStatus initialStatus = Boolean.TRUE.equals(toUser.getAllowAutoApprovePayment())
@@ -92,6 +93,8 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (Exception e) {
             // Log error
         }
+        
+        tripHistoryService.logPaymentRequest(fromUser, payment);
 
         return mapToResponse(payment);
     }
@@ -123,6 +126,8 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (Exception e) {
             // Log error
         }
+        
+        tripHistoryService.logPaymentApprove(payment.getToUser(), payment);
     }
 
     @Override
@@ -151,6 +156,8 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (Exception e) {
             // Log error
         }
+        
+        tripHistoryService.logPaymentReject(payment.getToUser(), payment);
     }
 
     @Override
@@ -187,10 +194,82 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PageResponse<PaymentResponse> getTripPaymentsPaginated(Long tripId, PaymentStatus status, Long fromUserId, Long toUserId, Pageable pageable) {
+    @Transactional
+    public PaymentResponse createBatchPayOnBehalf(Long tripId, Long payerId, com.kaitohuy.chiabill.dto.request.BatchPayOnBehalfRequest request, MultipartFile proof) {
+        if (request.getTotalAmount().compareTo(new BigDecimal("9999999999999")) > 0) {
+            throw new BusinessException("Số tiền thanh toán quá lớn");
+        }
+        if (request.getOnBehalfOfUserIds() == null || request.getOnBehalfOfUserIds().isEmpty()) {
+            throw new BusinessException("Vui lòng chọn ít nhất một người cần thanh toán hộ");
+        }
+        if (request.getOnBehalfOfAmounts() == null || request.getOnBehalfOfAmounts().size() != request.getOnBehalfOfUserIds().size()) {
+            throw new BusinessException("Danh sách số tiền không hợp lệ");
+        }
+        if (!tripMemberRepository.existsByTripIdAndUserId(tripId, payerId)) {
+            throw new BusinessException("Bạn không thuộc chuyến đi này");
+        }
+        if (!tripMemberRepository.existsByTripIdAndUserId(tripId, request.getToUserId())) {
+            throw new BusinessException("Người nhận không thuộc chuyến đi này");
+        }
+
+        Trip trip = tripRepository.findById(tripId).orElseThrow(() -> new BusinessException("Trip not found"));
+        User payer = userRepository.findById(payerId).orElseThrow(() -> new BusinessException("Người dùng không tồn tại"));
+        User toUser = userRepository.findById(request.getToUserId()).orElseThrow(() -> new BusinessException("Người nhận không tồn tại"));
+
+        List<User> onBehalfOfUsers = request.getOnBehalfOfUserIds().stream()
+                .map(id -> userRepository.findById(id).orElseThrow(() -> new BusinessException("Người dùng id=" + id + " không tồn tại")))
+                .collect(java.util.stream.Collectors.toList());
+
+        String proofUrl = (proof != null && !proof.isEmpty()) ? cloudinaryService.uploadImage(proof) : null;
+        PaymentStatus initialStatus = Boolean.TRUE.equals(toUser.getAllowAutoApprovePayment())
+                ? PaymentStatus.APPROVED : PaymentStatus.PENDING;
+
+        List<Payment> savedPayments = new java.util.ArrayList<>();
+        for (int i = 0; i < onBehalfOfUsers.size(); i++) {
+            User behalfUser = onBehalfOfUsers.get(i);
+            BigDecimal amount = request.getOnBehalfOfAmounts().get(i);
+
+            Payment payment = Payment.builder()
+                    .trip(trip)
+                    .fromUser(behalfUser) // Người nợ đứng tên gửi để trừ nợ
+                    .toUser(toUser)
+                    .onBehalfOfUser(payer) // Ghi nhận A đã trả hộ
+                    .amount(amount)
+                    .proofUrl(proofUrl)
+                    .status(initialStatus)
+                    .build();
+            paymentRepository.save(payment);
+            savedPayments.add(payment);
+        }
+
+        String names = onBehalfOfUsers.stream().map(User::getName).collect(java.util.stream.Collectors.joining(", "));
+        try {
+            notificationService.sendNotification(toUser,
+                    "Thanh toán hộ: " + trip.getName(),
+                    payer.getName() + " đã thanh toán hộ cho [" + names + "] tổng cộng " + CurrencyUtil.format(request.getTotalAmount()),
+                    NotificationType.PAYMENT_REQUESTED, trip.getId());
+        } catch (Exception ignored) {}
+
+        Payment dummyForLog = Payment.builder().trip(trip).toUser(toUser).amount(request.getTotalAmount()).build();
+        tripHistoryService.logPayOnBehalf(payer, dummyForLog, onBehalfOfUsers);
+
+        return PaymentResponse.builder()
+                .id(savedPayments.get(0).getId()).tripId(trip.getId())
+                .fromUserId(payer.getId()).fromUserName(payer.getName())
+                .toUserId(toUser.getId()).toUserName(toUser.getName())
+                .amount(request.getTotalAmount()).proofUrl(proofUrl).status(initialStatus)
+                .createdAt(savedPayments.get(0).getCreatedAt())
+                .onBehalfOfUserIds(request.getOnBehalfOfUserIds())
+                .onBehalfOfUserNames(onBehalfOfUsers.stream().map(User::getName).collect(java.util.stream.Collectors.toList()))
+                .build();
+    }
+
+
+    @Override
+    public PageResponse<PaymentResponse> getTripPaymentsPaginated(Long tripId, PaymentStatus status, Long fromUserId, Long toUserId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, Pageable pageable) {
         // Query dữ liệu với specification
         Page<Payment> paymentPage = paymentRepository.findAll(
-                PaymentSpecification.filter(tripId, status, fromUserId, toUserId),
+                PaymentSpecification.filter(tripId, status, fromUserId, toUserId, startDate, endDate),
                 pageable
         );
 

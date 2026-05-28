@@ -42,11 +42,13 @@ public class UserServiceImpl implements UserService {
         }
 
         if (request.getBankId() != null) {
-            user.setBankId(request.getBankId());
+            String bankId = request.getBankId().trim();
+            user.setBankId(bankId.isEmpty() ? null : bankId);
         }
 
         if (request.getAccountNo() != null) {
-            user.setAccountNo(request.getAccountNo());
+            String accountNo = request.getAccountNo().trim();
+            user.setAccountNo(accountNo.isEmpty() ? null : accountNo);
         }
 
         if (request.getPaymentPriority() != null) {
@@ -54,7 +56,8 @@ public class UserServiceImpl implements UserService {
         }
 
         if (request.getPhone() != null) {
-            user.setPhone(request.getPhone());
+            String phone = request.getPhone().trim();
+            user.setPhone(phone.isEmpty() ? null : phone);
         }
 
         if (request.getAllowAutoAdd() != null) {

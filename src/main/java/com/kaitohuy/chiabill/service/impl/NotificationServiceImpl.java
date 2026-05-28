@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import org.springframework.scheduling.annotation.Async;
 import java.util.List;
 
 @Service
@@ -51,6 +52,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Async
     @Transactional
     public void sendNotification(User receiver, String title, String body, NotificationType type, Long referenceId) {
         Notification notification = Notification.builder()
@@ -113,6 +115,12 @@ public class NotificationServiceImpl implements NotificationService {
         
         notification.setIsRead(true);
         notificationRepository.save(notification);
+    }
+
+    @Override
+    @Transactional
+    public void markAllAsRead(Long userId) {
+        notificationRepository.markAllAsRead(userId);
     }
 
     @Override

@@ -21,5 +21,12 @@ public class CreateExpenseRequest {
 
     private String receiptUrl;
 
+    private String currency;
+    private BigDecimal exchangeRate;
+
+    private Boolean isFromFund;
+    private String clientUuid;
+    private String splitType;
+
     private List<SplitRequest> splits;
 }

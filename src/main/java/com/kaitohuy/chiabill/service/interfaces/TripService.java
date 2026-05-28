@@ -15,7 +15,7 @@ public interface TripService {
 
     List<TripResponse> getMyTrips(Long userId);
 
-    PageResponse<TripResponse> getMyTripsPaginated(Long userId, String keyword, Pageable pageable);
+    PageResponse<TripResponse> getMyTripsPaginated(Long userId, String keyword, Integer month, Integer year, Pageable pageable);
 
     TripResponse getTripDetail(Long tripId, Long userId);
 
@@ -23,11 +23,16 @@ public interface TripService {
 
     void addDirectMember(Long tripId, Long ownerId, AddMemberDirectRequest request);
 
+    void importMembers(Long tripId, Long ownerId, com.kaitohuy.chiabill.dto.request.ImportMembersRequest request);
+
     void joinTrip(Long tripId, Long userId);
 
     TripResponse updateTrip(Long tripId, Long userId, UpdateTripRequest request);
 
     void deleteTrip(Long tripId, Long userId);
+    List<TripResponse> getDeletedTrips(Long userId);
+    void restoreTrip(Long tripId, Long userId);
+    void forceDeleteTrip(Long tripId, Long userId);
 
     void leaveTrip(Long tripId, Long userId);
 

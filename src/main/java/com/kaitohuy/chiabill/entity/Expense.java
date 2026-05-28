@@ -51,6 +51,21 @@ public class Expense extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime expenseDate;
 
+    @Column(nullable = true)
+    @Builder.Default
+    private Boolean isFromFund = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_fund_id")
+    private GroupFund groupFund;
+
+    @Column(unique = true, length = 36)
+    private String clientUuid;
+
+    @Column(length = 20, nullable = false)
+    @Builder.Default
+    private String splitType = "EQUAL";
+
     @OneToMany(mappedBy = "expense", fetch = FetchType.LAZY)
     private List<ExpenseSplit> splits;
 }

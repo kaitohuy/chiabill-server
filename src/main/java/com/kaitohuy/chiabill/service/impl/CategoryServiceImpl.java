@@ -80,7 +80,8 @@ public class CategoryServiceImpl implements CategoryService {
                     ExpenseCategory.builder().name("Y tế / Thuốc men").icon("💊").build(),
                     ExpenseCategory.builder().name("Đồ dùng cá nhân").icon("🧻").build(),
                     ExpenseCategory.builder().name("Tiền Tip / Bồi dưỡng").icon("💸").build(),
-                    ExpenseCategory.builder().name("Chi phí phát sinh").icon("⚠").build()
+                    ExpenseCategory.builder().name("Chi phí phát sinh").icon("⚠").build(),
+                    ExpenseCategory.builder().name("Quỹ chung").icon("💰").build()
             );
             categoryRepository.saveAll(defaults);
         }

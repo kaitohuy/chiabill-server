@@ -21,6 +21,16 @@ public interface TripRepository extends JpaRepository<Trip, Long>, JpaSpecificat
     """)
     List<Trip> findAllByUserId(@Param("userId") Long userId);
 
+    @Query("""
+        SELECT t FROM Trip t
+        JOIN TripMember tm ON tm.trip = t
+        WHERE tm.user.id = :userId
+        AND tm.role = 'OWNER'
+        AND t.isDeleted = true
+        ORDER BY t.updatedAt DESC
+    """)
+    List<Trip> findDeletedTripsByOwnerId(@Param("userId") Long userId);
+
     // 🔥 Load trip + members
     @Query("""
         SELECT t FROM Trip t

@@ -11,8 +11,23 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
     // 🔥 Basic
     List<Expense> findByTripIdAndIsDeletedFalse(Long tripId);
 
+    java.util.Optional<Expense> findByClientUuid(String clientUuid);
+
     // 🔥 Find by payer (for ghost claim)
     List<Expense> findByPayerIdAndIsDeletedFalse(Long payerId);
+
+    // 🔥 Load full expense (payer + category + splits) — dùng cho Export Excel/PDF
+    @Query("""
+        SELECT DISTINCT e FROM Expense e
+        LEFT JOIN FETCH e.payer
+        LEFT JOIN FETCH e.category
+        LEFT JOIN FETCH e.splits s
+        LEFT JOIN FETCH s.user
+        WHERE e.trip.id = :tripId
+        AND e.isDeleted = false
+        ORDER BY e.expenseDate ASC, e.id ASC
+    """)
+    List<Expense> findAllByTripIdWithPayerAndCategory(@Param("tripId") Long tripId);
 
     // 🔥 Load full expense (payer + splits)
     @Query("""
@@ -21,6 +36,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
         LEFT JOIN FETCH e.trip
         WHERE e.trip.id = :tripId
         AND e.isDeleted = false
+        ORDER BY e.expenseDate DESC, e.id DESC
     """)
     List<Expense> findAllByTripIdWithPayer(@Param("tripId") Long tripId);
 
@@ -32,6 +48,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
         LEFT JOIN FETCH e.splits
         WHERE e.trip.id = :tripId
         AND e.isDeleted = false
+        ORDER BY e.expenseDate DESC, e.id DESC
     """)
     List<Expense> findAllForSettlement(@Param("tripId") Long tripId);
 
@@ -43,8 +60,41 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
         LEFT JOIN FETCH s.user
         WHERE e.trip.id = :tripId
         AND e.isDeleted = false
+        ORDER BY e.expenseDate DESC, e.id DESC
     """)
     List<Expense> fetchAllDataForSettlement(@Param("tripId") Long tripId);
+
+    @Query("""
+        SELECT DISTINCT e FROM Expense e
+        LEFT JOIN FETCH e.payer
+        LEFT JOIN FETCH e.trip
+        LEFT JOIN FETCH e.splits s
+        LEFT JOIN FETCH s.user
+        WHERE e.trip.id IN :tripIds
+        AND e.isDeleted = false
+        ORDER BY e.expenseDate DESC, e.id DESC
+    """)
+    List<Expense> fetchAllDataForSettlementIn(@Param("tripIds") List<Long> tripIds);
+
+    @Query("""
+        SELECT new com.kaitohuy.chiabill.dto.response.TripStatResponse(t.id, t.name, SUM(es.amount), t.categoryIcon)
+        FROM ExpenseSplit es
+        JOIN es.expense e
+        JOIN e.trip t
+        JOIN TripMember tm ON tm.trip = t AND tm.user.id = :userId
+        WHERE es.user.id = :userId
+        AND tm.isActive = true
+        AND e.isDeleted = false
+        AND t.isDeleted = false
+        AND (:month IS NULL OR MONTH(e.expenseDate) = :month)
+        AND (:year IS NULL OR YEAR(e.expenseDate) = :year)
+        GROUP BY t.id, t.name, t.categoryIcon
+        ORDER BY SUM(es.amount) DESC
+    """)
+    List<com.kaitohuy.chiabill.dto.response.TripStatResponse> getOverallExpenseStats(
+            @Param("userId") Long userId,
+            @Param("month") Integer month,
+            @Param("year") Integer year);
 
     @Query("""
         SELECT new com.kaitohuy.chiabill.dto.response.CategoryStatResponse(c.id, c.name, c.icon, SUM(e.totalAmount))
@@ -80,4 +130,13 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
         WHERE e.id IN :ids
     """)
     List<Expense> findAllByIdInWithPayerAndCategoryAndSplits(@Param("ids") List<Long> ids);
+
+    @Query("""
+        SELECT e.exchangeRate FROM Expense e
+        WHERE e.currency = :currency
+        AND e.exchangeRate IS NOT NULL
+        ORDER BY e.createdAt DESC
+        LIMIT 1
+    """)
+    java.math.BigDecimal findLatestExchangeRateByCurrency(@Param("currency") String currency);
 }

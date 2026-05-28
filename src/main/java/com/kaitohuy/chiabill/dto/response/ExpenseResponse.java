@@ -17,9 +17,14 @@ public class ExpenseResponse {
     private String categoryName;
     private String categoryIcon;
     private String currency;
+    private BigDecimal exchangeRate;
     private LocalDateTime expenseDate;
 
     private UserResponse payer;
+
+    private Boolean isFromFund;
+    private String clientUuid;
+    private String splitType;
 
     private List<SplitResponse> splits;
 }

@@ -8,4 +8,5 @@ import java.math.BigDecimal;
 public class SplitRequest {
     private Long userId;
     private BigDecimal amount;
+    private BigDecimal splitValue;
 }

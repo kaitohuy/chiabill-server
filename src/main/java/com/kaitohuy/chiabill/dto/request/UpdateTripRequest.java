@@ -15,4 +15,10 @@ public class UpdateTripRequest {
     private String coverUrl;
 
     private BigDecimal totalBudget;
+
+    private java.time.LocalDateTime startDate;
+
+    private String categoryName;
+    
+    private String categoryIcon;
 }

@@ -29,6 +29,12 @@ public class UpdateExpenseRequest {
     
     private String receiptUrl;
 
+    private String currency;
+    private BigDecimal exchangeRate;
+
+    private Boolean isFromFund;
+    private String splitType;
+
     @NotEmpty(message = "Splits cannot be empty")
     @Valid
     private List<SplitRequest> splits;

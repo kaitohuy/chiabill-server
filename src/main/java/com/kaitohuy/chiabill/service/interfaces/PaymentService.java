@@ -1,5 +1,6 @@
 package com.kaitohuy.chiabill.service.interfaces;
 
+import com.kaitohuy.chiabill.dto.request.BatchPayOnBehalfRequest;
 import com.kaitohuy.chiabill.dto.response.PageResponse;
 import com.kaitohuy.chiabill.dto.response.PaymentResponse;
 import com.kaitohuy.chiabill.entity.PaymentStatus;
@@ -18,7 +19,9 @@ public interface PaymentService {
 
     List<PaymentResponse> getTripPayments(Long tripId);
 
-    PageResponse<PaymentResponse> getTripPaymentsPaginated(Long tripId, PaymentStatus status, Long fromUserId, Long toUserId, Pageable pageable);
+    PageResponse<PaymentResponse> getTripPaymentsPaginated(Long tripId, PaymentStatus status, Long fromUserId, Long toUserId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, Pageable pageable);
 
     void createVirtualPayment(Long tripId, Long fromUserId, Long toUserId, BigDecimal amount, String reason);
+
+    PaymentResponse createBatchPayOnBehalf(Long tripId, Long payerId, BatchPayOnBehalfRequest request, MultipartFile proof);
 }

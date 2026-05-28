@@ -24,7 +24,7 @@ public class PaymentController {
             @PathVariable Long tripId,
             @RequestParam("toUserId") Long toUserId,
             @RequestParam("amount") BigDecimal amount,
-            @RequestParam("proof") MultipartFile proof,
+            @RequestParam(value = "proof", required = false) MultipartFile proof,
             Authentication authentication) {
 
         Long fromUserId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
@@ -32,6 +32,29 @@ public class PaymentController {
         return ApiResponse.<PaymentResponse>builder()
                 .success(true)
                 .data(paymentService.createPayment(tripId, fromUserId, toUserId, amount, proof))
+                .build();
+    }
+
+    @PostMapping(value = "/trips/{tripId}/payments/batch-behalf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<PaymentResponse> createBatchPayOnBehalf(
+            @PathVariable Long tripId,
+            @RequestParam("toUserId") Long toUserId,
+            @RequestParam("totalAmount") BigDecimal totalAmount,
+            @RequestParam("onBehalfOfUserIds") List<Long> onBehalfOfUserIds,
+            @RequestParam("onBehalfOfAmounts") List<BigDecimal> onBehalfOfAmounts,
+            @RequestParam(value = "proof", required = false) MultipartFile proof,
+            Authentication authentication) {
+
+        Long payerId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
+        com.kaitohuy.chiabill.dto.request.BatchPayOnBehalfRequest request = new com.kaitohuy.chiabill.dto.request.BatchPayOnBehalfRequest();
+        request.setToUserId(toUserId);
+        request.setTotalAmount(totalAmount);
+        request.setOnBehalfOfUserIds(onBehalfOfUserIds);
+        request.setOnBehalfOfAmounts(onBehalfOfAmounts);
+
+        return ApiResponse.<PaymentResponse>builder()
+                .success(true)
+                .data(paymentService.createBatchPayOnBehalf(tripId, payerId, request, proof))
                 .build();
     }
 
@@ -49,11 +72,13 @@ public class PaymentController {
             @RequestParam(required = false) com.kaitohuy.chiabill.entity.PaymentStatus status,
             @RequestParam(required = false) Long fromUserId,
             @RequestParam(required = false) Long toUserId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime startDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime endDate,
             org.springframework.data.domain.Pageable pageable) {
 
         return ApiResponse.<com.kaitohuy.chiabill.dto.response.PageResponse<PaymentResponse>>builder()
                 .success(true)
-                .data(paymentService.getTripPaymentsPaginated(tripId, status, fromUserId, toUserId, pageable))
+                .data(paymentService.getTripPaymentsPaginated(tripId, status, fromUserId, toUserId, startDate, endDate, pageable))
                 .build();
     }
 
