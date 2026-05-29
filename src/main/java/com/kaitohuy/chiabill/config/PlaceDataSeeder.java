@@ -28,7 +28,6 @@ public class PlaceDataSeeder {
     private final ObjectMapper objectMapper;
 
     @EventListener(ApplicationReadyEvent.class)
-    @Transactional
     public void seedPlaces() {
         if (placeRepository.count() > 0) {
             log.info("Bảng places đã có dữ liệu, bỏ qua bước seeder.");

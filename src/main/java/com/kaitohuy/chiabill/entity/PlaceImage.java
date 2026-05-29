@@ -23,7 +23,7 @@ public class PlaceImage extends BaseEntity {
     @JoinColumn(name = "place_id", nullable = false)
     private Place place;
 
-    @Column(nullable = false)
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
     @Column(nullable = false, columnDefinition = "varchar(255) default 'Khác'")
