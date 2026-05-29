@@ -1,5 +1,6 @@
 package com.kaitohuy.chiabill.config;
 
+import org.springframework.http.HttpMethod;
 import com.kaitohuy.chiabill.security.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.*;
@@ -26,7 +27,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("api/categories/seed").permitAll()
                         .requestMatchers("/healthz").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/invites/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/places/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/invites/*").permitAll()
                         .requestMatchers("/.well-known/assetlinks.json").permitAll()
                         .requestMatchers("/join/**").permitAll()
                         .requestMatchers("/images/**", "/css/**", "/js/**").permitAll()
