@@ -17,6 +17,8 @@ public interface PlaceService {
     PlaceResponse getPlaceById(Long id);
     
     PlaceResponse createPlace(PlaceRequest request, Long creatorId);
+
+    List<PlaceResponse> createPlaces(List<PlaceRequest> requests, Long creatorId);
     
     PlaceResponse updatePlace(Long id, PlaceRequest request, Long userId);
     

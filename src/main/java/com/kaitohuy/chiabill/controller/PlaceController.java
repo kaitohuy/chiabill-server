@@ -93,4 +93,18 @@ public class PlaceController {
         placeReportService.submitReport(id, request, userDetails.getUserId());
         return ResponseEntity.ok(new ApiResponse<>(true, null, null));
     }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<ApiResponse<List<PlaceResponse>>> createPlaces(
+            @Valid @RequestBody List<PlaceRequest> requests,
+            @AuthenticationPrincipal UserPrincipal userDetails) {
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        placeService.createPlaces(requests, userDetails.getUserId()),
+                        null
+                )
+        );
+    }
 }

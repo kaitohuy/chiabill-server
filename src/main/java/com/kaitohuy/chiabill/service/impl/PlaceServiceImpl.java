@@ -82,6 +82,8 @@ public class PlaceServiceImpl implements PlaceService {
                 PlaceImage img = PlaceImage.builder()
                         .place(place)
                         .imageUrl(url)
+                        .album("Khác")
+                        .user(creator)
                         .build();
                 placeImageRepository.save(img);
             }
@@ -168,5 +170,22 @@ public class PlaceServiceImpl implements PlaceService {
                 .creatorId(place.getCreator() != null ? place.getCreator().getId() : null)
                 .isUserGenerated(place.getCreator() != null)
                 .build();
+    }
+
+
+    @Override
+    @Transactional
+    public List<PlaceResponse> createPlaces(List<PlaceRequest> requests, Long creatorId) {
+        if (requests == null || requests.isEmpty()) {
+            throw new BusinessException("Danh sách địa điểm không được để trống");
+        }
+
+        if (requests.size() > 500) {
+            throw new BusinessException("Chỉ được import tối đa 500 địa điểm mỗi lần");
+        }
+
+        return requests.stream()
+                .map(request -> createPlace(request, creatorId))
+                .collect(Collectors.toList());
     }
 }

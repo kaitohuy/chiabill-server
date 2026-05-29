@@ -40,3 +40,4 @@ out/
 .env
 .env.prod
 chiabill-firebase.json
+places.json
