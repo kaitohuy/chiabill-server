@@ -68,4 +68,14 @@ public class UserController {
                 .data(userService.uploadBankQr(userId, file))
                 .build();
     }
+
+    @DeleteMapping("/me")
+    public ApiResponse<Void> deleteAccount(Authentication authentication) {
+        Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
+        userService.deleteMyAccount(userId);
+        return ApiResponse.<Void>builder()
+                .success(true)
+                .message("Tài khoản đã được xóa thành công")
+                .build();
+    }
 }

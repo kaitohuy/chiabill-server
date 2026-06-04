@@ -14,4 +14,8 @@ public interface UserService {
     String uploadAvatar(Long userId, MultipartFile file);
 
     String uploadBankQr(Long userId, MultipartFile file);
+
+    void deleteMyAccount(Long userId);
+
+    void deleteAccountByEmailOrPhone(String email, String phone);
 }

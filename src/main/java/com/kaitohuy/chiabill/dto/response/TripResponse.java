@@ -21,6 +21,7 @@ public class TripResponse {
     private BigDecimal totalBudget;
     private Long ownerId;
     private java.time.LocalDateTime startDate;
+    private java.time.LocalDateTime endDate;
     private LocalDateTime createdAt;
     private List<TripMemberResponse> members;
     private Integer memberCount;

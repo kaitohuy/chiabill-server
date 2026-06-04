@@ -259,4 +259,18 @@ public class TripController {
                                 .contentType(MediaType.APPLICATION_PDF)
                                 .body(data);
         }
+
+        @PutMapping(value = "/{tripId}/cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public ApiResponse<TripResponse> updateTripCover(
+                        @PathVariable Long tripId,
+                        @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+                        Authentication authentication) {
+
+                Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
+
+                return ApiResponse.<TripResponse>builder()
+                                .success(true)
+                                .data(tripService.updateTripCover(tripId, userId, file))
+                                .build();
+        }
 }

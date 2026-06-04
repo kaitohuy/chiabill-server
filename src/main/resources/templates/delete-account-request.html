@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yêu cầu xóa tài khoản - ChiaBill</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8bc34a;
+            --primary-dark: #689f38;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --error: #ef4444;
+            --success: #22c55e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 1.5rem;
+            padding: 3rem 2rem;
+            box-shadow: 0 10px 25px -5px rgba(100, 116, 139, 0.08);
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        p.desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        input[type="email"], input[type="text"], textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            font-size: 0.95rem;
+            color: var(--text);
+            background-color: var(--bg);
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-group input {
+            margin-top: 0.25rem;
+            margin-right: 0.75rem;
+        }
+
+        .checkbox-group label {
+            font-weight: 400;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 0.85rem 1.5rem;
+            background: linear-gradient(to right, var(--error), #dc2626);
+            color: white;
+            border: none;
+            border-radius: 0.8rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn:disabled {
+            background: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .message.success {
+            display: block;
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .message.error {
+            display: block;
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">ChiaBill</div>
+            <h1>Yêu cầu xóa tài khoản</h1>
+            <p class="desc">Vui lòng nhập thông tin tài khoản cần xóa. Chúng tôi sẽ xử lý yêu cầu của bạn trong vòng 24-48 giờ làm việc.</p>
+        </div>
+
+        <div id="msgContainer" class="message"></div>
+
+        <form id="deleteForm" onsubmit="submitForm(event)">
+            <div class="form-group">
+                <label for="email">Địa chỉ Email đăng nhập</label>
+                <input type="email" id="email" required placeholder="nhap-email@gmail.com">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Số điện thoại liên kết (nếu có)</label>
+                <input type="text" id="phone" placeholder="Ví dụ: 0987654321">
+            </div>
+
+            <div class="form-group">
+                <label for="reason">Lý do yêu cầu xóa tài khoản (tùy chọn)</label>
+                <textarea id="reason" rows="3" placeholder="Chia sẻ với chúng tôi lý do bạn muốn rời đi..."></textarea>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="confirm" required>
+                <label for="confirm">Tôi hiểu và đồng ý rằng toàn bộ lịch sử hóa đơn, chuyến đi và dữ liệu cá nhân của tôi sẽ bị xóa hoặc vô danh hóa vĩnh viễn và không thể khôi phục lại.</label>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn">GỬI YÊU CẦU XÓA TÀI KHOẢN</button>
+        </form>
+
+        <div class="footer">
+            Quay lại <a href="/privacy-policy" style="color: var(--primary-dark); text-decoration: none; font-weight: 600;">Chính sách bảo mật</a>
+        </div>
+    </div>
+
+    <script>
+        function submitForm(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const msgContainer = document.getElementById('msgContainer');
+            
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const reason = document.getElementById('reason').value;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'ĐANG XỬ LÝ...';
+            
+            // Gọi API post lên Server
+            fetch('/delete-account-request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    phone: phone,
+                    reason: reason
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    msgContainer.className = 'message success';
+                    msgContainer.innerText = 'Yêu cầu xóa tài khoản đã được gửi thành công! Dữ liệu của bạn đang được tiến hành xử lý xóa.';
+                    document.getElementById('deleteForm').reset();
+                } else {
+                    msgContainer.className = 'message error';
+                    msgContainer.innerText = data.message || 'Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng kiểm tra lại thông tin.';
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'GỬI YÊU CẦU XÓA TÀI KHOẢN';
+                }
+            })
+            .catch(error => {
+                msgContainer.className = 'message error';
+                msgContainer.innerText = 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.';
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'GỬI YÊU CẦU XÓA TÀI KHOẢN';
+            });
+        }
+    </script>
+</body>
+</html>

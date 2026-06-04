@@ -17,7 +17,7 @@ public class DeepLinkController {
 
     @GetMapping(value = "/join/{inviteCode}", produces = MediaType.TEXT_HTML_VALUE)
     public String joinTripLandingPage(@PathVariable String inviteCode) {
-        String host = "chiabill-server.onrender.com";
+        String host = "localhost";
         try {
             if (baseUrl != null && !baseUrl.isEmpty()) {
                 java.net.URI uri = new java.net.URI(baseUrl);

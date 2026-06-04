@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "trips", indexes = {
@@ -37,6 +38,9 @@ public class Trip extends BaseEntity {
     private BigDecimal totalBudget;
 
     private java.time.LocalDateTime startDate;
+
+    @Column(name = "end_date")
+    private java.time.LocalDateTime endDate;
 
     @Column(nullable = false)
     @Builder.Default

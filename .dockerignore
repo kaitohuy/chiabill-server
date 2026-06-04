@@ -1,0 +1,25 @@
+# Folder build & build artifacts
+target/
+build/
+.gradle/
+bin/
+
+# IDE configurations
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Environment & Logs
+.env
+.env.prod
+*.log
+compile_errors.txt
+build_log.txt
+deps.txt

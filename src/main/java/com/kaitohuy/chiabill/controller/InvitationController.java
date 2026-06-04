@@ -1,5 +1,6 @@
 package com.kaitohuy.chiabill.controller;
 
+import com.kaitohuy.chiabill.dto.request.CreateInviteRequest;
 import com.kaitohuy.chiabill.dto.response.ApiResponse;
 import com.kaitohuy.chiabill.dto.response.InvitationResponse;
 import com.kaitohuy.chiabill.dto.response.InviteInfoResponse;
@@ -21,7 +22,7 @@ public class InvitationController {
     @PostMapping("/trips/{tripId}/invites")
     public ApiResponse<InvitationResponse> createInvite(
             @PathVariable Long tripId,
-            @RequestBody(required = false) com.kaitohuy.chiabill.dto.request.CreateInviteRequest request,
+            @RequestBody(required = false) CreateInviteRequest request,
             Authentication authentication) {
 
         Long callerId = ((UserPrincipal) authentication.getPrincipal()).getUserId();

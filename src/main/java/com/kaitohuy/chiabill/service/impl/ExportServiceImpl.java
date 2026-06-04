@@ -33,6 +33,7 @@ public class ExportServiceImpl implements ExportService {
     private final TripMemberRepository tripMemberRepository;
     private final ExpenseRepository expenseRepository;
     private final SettlementService settlementService;
+    private final ItineraryItemRepository itineraryItemRepository;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -59,27 +60,29 @@ public class ExportServiceImpl implements ExportService {
                           XSSFCellStyle total, XSSFCellStyle label, XSSFCellStyle evenRow, XSSFCellStyle oddRow) {}
 
     private Styles createStyles(XSSFWorkbook wb) {
+        IndexedColorMap colorMap = wb.getStylesSource().getIndexedColors();
+
         XSSFCellStyle title = wb.createCellStyle();
         XSSFFont tf = wb.createFont(); tf.setBold(true); tf.setFontHeightInPoints((short) 16);
-        tf.setColor(new XSSFColor(COLOR_PRIMARY, null));
+        tf.setColor(new XSSFColor(COLOR_PRIMARY, colorMap));
         title.setFont(tf); title.setAlignment(HorizontalAlignment.CENTER); title.setVerticalAlignment(VerticalAlignment.CENTER);
 
         XSSFCellStyle section = wb.createCellStyle();
-        section.setFillForegroundColor(new XSSFColor(COLOR_PRIMARY, null));
+        section.setFillForegroundColor(new XSSFColor(COLOR_PRIMARY, colorMap));
         section.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         XSSFFont sf = wb.createFont(); sf.setBold(true); sf.setFontHeightInPoints((short) 11);
-        sf.setColor(new XSSFColor(COLOR_HEADER_TEXT, null));
+        sf.setColor(new XSSFColor(COLOR_HEADER_TEXT, colorMap));
         section.setFont(sf); section.setAlignment(HorizontalAlignment.LEFT); section.setVerticalAlignment(VerticalAlignment.CENTER);
 
         XSSFCellStyle colHeader = wb.createCellStyle();
-        colHeader.setFillForegroundColor(new XSSFColor(new Color(187, 222, 251), null));
+        colHeader.setFillForegroundColor(new XSSFColor(new Color(187, 222, 251), colorMap));
         colHeader.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         XSSFFont cf = wb.createFont(); cf.setBold(true);
         colHeader.setFont(cf); colHeader.setAlignment(HorizontalAlignment.CENTER);
         colHeader.setBorderBottom(BorderStyle.MEDIUM); colHeader.setBorderTop(BorderStyle.THIN);
 
         XSSFCellStyle total = wb.createCellStyle();
-        total.setFillForegroundColor(new XSSFColor(new Color(220, 237, 255), null));
+        total.setFillForegroundColor(new XSSFColor(new Color(220, 237, 255), colorMap));
         total.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         XSSFFont tof = wb.createFont(); tof.setBold(true);
         total.setFont(tof); total.setBorderTop(BorderStyle.MEDIUM);
@@ -88,7 +91,7 @@ public class ExportServiceImpl implements ExportService {
         XSSFFont lf = wb.createFont(); lf.setBold(true); label.setFont(lf);
 
         XSSFCellStyle evenRow = wb.createCellStyle();
-        evenRow.setFillForegroundColor(new XSSFColor(COLOR_ROW_ALT, null));
+        evenRow.setFillForegroundColor(new XSSFColor(COLOR_ROW_ALT, colorMap));
         evenRow.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         evenRow.setBorderBottom(BorderStyle.THIN); evenRow.setBorderTop(BorderStyle.THIN);
 
@@ -118,6 +121,76 @@ public class ExportServiceImpl implements ExportService {
         }
     }
 
+    @Override
+    public byte[] exportItineraryToExcel(Long tripId, Long userId) {
+        validateAccess(tripId, userId);
+        Trip trip = tripRepository.findById(tripId).orElseThrow(() -> new BusinessException("Trip not found"));
+        List<ItineraryItem> items = itineraryItemRepository.findActiveItineraryByTripId(tripId);
+
+        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Styles s = createStyles(wb);
+            XSSFSheet sheet = wb.createSheet("Lich trinh");
+
+            int row = 0;
+            XSSFRow titleRow = sheet.createRow(row++);
+            titleRow.setHeightInPoints(36);
+            for (int i = 0; i <= 5; i++) {
+                XSSFCell c = titleRow.createCell(i);
+                c.setCellStyle(s.title());
+            }
+            titleRow.getCell(0).setCellValue("LỊCH TRÌNH CHUYẾN ĐI: " + trip.getName().toUpperCase());
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 5));
+            row++;
+
+            String[] cols = {"Ngày", "Khung giờ", "Hoạt động", "Địa điểm", "Ghi chú", "Chi phí dự toán"};
+            row = writeHeaderRow(sheet, s, row, "CHI TIẾT LỊCH TRÌNH DU LỊCH", cols, cols.length);
+
+            int idx = 1;
+            for (ItineraryItem item : items) {
+                XSSFRow r = sheet.createRow(row++);
+                XSSFCellStyle rs = idx % 2 == 0 ? s.evenRow() : s.oddRow();
+                for (int c = 0; c < cols.length; c++) r.createCell(c).setCellStyle(rs);
+
+                String dayValue;
+                if (trip.getStartDate() != null) {
+                    LocalDateTime itemDate = trip.getStartDate().plusDays(item.getDayNumber() - 1);
+                    dayValue = "Ngày " + item.getDayNumber() + " (" + itemDate.format(DATE_FMT) + ")";
+                } else {
+                    dayValue = "Ngày " + item.getDayNumber();
+                }
+
+                r.getCell(0).setCellValue(dayValue);
+                r.getCell(1).setCellValue(item.getTimeRange() != null ? item.getTimeRange() : "");
+                r.getCell(2).setCellValue(item.getActivity() != null ? item.getActivity() : "");
+                r.getCell(3).setCellValue(item.getLocation() != null ? item.getLocation() : "");
+                r.getCell(4).setCellValue(item.getNote() != null ? item.getNote() : "");
+                r.getCell(5).setCellValue(item.getEstimatedCost() != null ? item.getEstimatedCost().doubleValue() : 0.0);
+                idx++;
+            }
+
+            for (int c = 0; c < cols.length; c++) {
+                sheet.autoSizeColumn(c);
+                int currentWidth = sheet.getColumnWidth(c);
+                int minWidth = 15 * 256;
+                if (c == 0) minWidth = 22 * 256; // Ngày X (dd/MM/yyyy)
+                if (c == 1) minWidth = 18 * 256; // Khung giờ
+                if (c == 2) minWidth = 35 * 256; // Hoạt động
+                if (c == 3) minWidth = 25 * 256; // Địa điểm
+                if (c == 4) minWidth = 25 * 256; // Ghi chú
+                if (c == 5) minWidth = 18 * 256; // Chi phí
+                if (currentWidth < minWidth) {
+                    sheet.setColumnWidth(c, minWidth);
+                }
+            }
+
+            wb.write(out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            log.error("Error generating Itinerary Excel: ", e);
+            throw new BusinessException("Lỗi khi xuất file Excel lịch trình");
+        }
+    }
+
     private void buildOverviewSheet(XSSFWorkbook wb, Styles s, Trip trip, List<TripMember> members,
                                      List<com.kaitohuy.chiabill.dto.response.CategoryStatResponse> stats) {
         XSSFSheet sheet = wb.createSheet("Tong quan");
@@ -125,9 +198,11 @@ public class ExportServiceImpl implements ExportService {
 
         XSSFRow titleRow = sheet.createRow(row++);
         titleRow.setHeightInPoints(36);
-        XSSFCell titleCell = titleRow.createCell(0);
-        titleCell.setCellValue("BÁO CÁO CHUYẾN ĐI: " + trip.getName().toUpperCase());
-        titleCell.setCellStyle(s.title());
+        for (int i = 0; i <= 5; i++) {
+            XSSFCell c = titleRow.createCell(i);
+            c.setCellStyle(s.title());
+        }
+        titleRow.getCell(0).setCellValue("BÁO CÁO CHUYẾN ĐI: " + trip.getName().toUpperCase());
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 5));
         row++;
 
@@ -222,9 +297,11 @@ public class ExportServiceImpl implements ExportService {
     private int writeHeaderRow(XSSFSheet sheet, Styles s, int rowIdx, String sectionTitle, String[] cols, int colCount) {
         XSSFRow secRow = sheet.createRow(rowIdx++);
         secRow.setHeightInPoints(22);
-        XSSFCell secCell = secRow.createCell(0);
-        secCell.setCellValue(sectionTitle);
-        secCell.setCellStyle(s.section());
+        for (int i = 0; i < colCount; i++) {
+            XSSFCell c = secRow.createCell(i);
+            c.setCellStyle(s.section());
+        }
+        secRow.getCell(0).setCellValue(sectionTitle);
         sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 0, colCount - 1));
 
         XSSFRow hRow = sheet.createRow(rowIdx++);

@@ -10,6 +10,7 @@ public class CreateTripRequest {
     private String coverUrl;
     private BigDecimal totalBudget;
     private java.time.LocalDateTime startDate;
+    private java.time.LocalDateTime endDate;
     private String categoryName;
     private String categoryIcon;
 }

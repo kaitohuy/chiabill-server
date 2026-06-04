@@ -132,4 +132,62 @@ public class UserServiceImpl implements UserService {
 
         return bankQrUrl;
     }
+
+    @Override
+    @Transactional
+    public void deleteMyAccount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("User not found"));
+        performSoftDelete(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAccountByEmailOrPhone(String email, String phone) {
+        if ((email == null || email.isBlank()) && (phone == null || phone.isBlank())) {
+            throw new BusinessException("Email hoặc số điện thoại không được để trống");
+        }
+        User user = userRepository.findByEmailOrPhone(
+                (email != null && !email.isBlank()) ? email.trim() : null,
+                (phone != null && !phone.isBlank()) ? phone.trim() : null
+        ).orElseThrow(() -> new BusinessException("Không tìm thấy tài khoản với thông tin đã cung cấp."));
+        
+        performSoftDelete(user);
+    }
+
+    private void performSoftDelete(User user) {
+        // Xoá ảnh trên Cloudinary nếu có để tiết kiệm dung lượng
+        if (user.getAvatarUrl() != null) {
+            try {
+                cloudinaryService.deleteImage(user.getAvatarUrl());
+            } catch (Exception e) {
+                // Bỏ qua lỗi xóa ảnh
+            }
+            user.setAvatarUrl(null);
+        }
+        if (user.getBankQrUrl() != null) {
+            try {
+                cloudinaryService.deleteImage(user.getBankQrUrl());
+            } catch (Exception e) {
+                // Bỏ qua lỗi xóa ảnh
+            }
+            user.setBankQrUrl(null);
+        }
+
+        // Soft delete bằng cách set isDeleted và scramble các trường unique/nhạy cảm
+        user.setIsDeleted(true);
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        
+        if (user.getEmail() != null) {
+            user.setEmail("deleted_" + timestamp + "_" + user.getEmail());
+        }
+        
+        user.setPhone(null);
+        user.setName("Người dùng đã xóa");
+        user.setProviderId(null);
+        user.setAccountNo(null);
+        user.setBankId(null);
+        
+        userRepository.save(user);
+    }
 }

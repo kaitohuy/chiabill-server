@@ -77,14 +77,12 @@ public class AuthServiceImpl implements AuthService {
             user = existingByProvider.get();
 
         } else if (existingByEmail.isPresent()) {
-            // 🔥 merge theo email
             user = existingByEmail.get();
             user.setProvider("GOOGLE");
             user.setProviderId(providerId);
             user.setIsAnonymous(false);
 
         } else if (currentUserId != null) {
-            // 🔥 merge anonymous
             user = userRepository.findById(currentUserId)
                     .orElseThrow(() -> new BusinessException("User not found"));
 

@@ -68,6 +68,7 @@ public class TripServiceImpl implements TripService {
                 .coverUrl(request.getCoverUrl())
                 .totalBudget(request.getTotalBudget())
                 .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
                 .categoryName(request.getCategoryName())
                 .categoryIcon(request.getCategoryIcon())
                 .createdBy(creator)
@@ -461,6 +462,7 @@ public class TripServiceImpl implements TripService {
         trip.setDescription(request.getDescription());
         trip.setTotalBudget(request.getTotalBudget());
         trip.setStartDate(request.getStartDate());
+        trip.setEndDate(request.getEndDate());
         trip.setCategoryName(request.getCategoryName());
         trip.setCategoryIcon(request.getCategoryIcon());
 
@@ -719,6 +721,7 @@ public class TripServiceImpl implements TripService {
         TripResponse res = tripMapper.toResponse(trip);
         res.setCreatedAt(trip.getCreatedAt()); // Đảm bảo lấy từ BaseEntity
         res.setStartDate(trip.getStartDate());
+        res.setEndDate(trip.getEndDate());
         
         List<TripMember> members = tripMemberRepository.findActiveMembersWithUser(trip.getId());
 
@@ -763,5 +766,27 @@ public class TripServiceImpl implements TripService {
         if (!"OWNER".equals(member.getRole())) {
             throw new BusinessException("Chỉ chủ nhóm mới được phép thực hiện thao tác này");
         }
+    }
+
+    @Override
+    @Transactional
+    public TripResponse updateTripCover(Long tripId, Long userId, org.springframework.web.multipart.MultipartFile file) {
+        validateOwner(tripId, userId);
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new BusinessException("Trip not found"));
+
+        if (Boolean.TRUE.equals(trip.getIsDeleted())) {
+            throw new BusinessException("Trip has been deleted");
+        }
+
+        if (trip.getCoverUrl() != null) {
+            cloudinaryService.deleteImage(trip.getCoverUrl());
+        }
+
+        String coverUrl = cloudinaryService.uploadImage(file);
+        trip.setCoverUrl(coverUrl);
+        tripRepository.save(trip);
+
+        return buildTripResponse(trip);
     }
 }

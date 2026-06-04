@@ -7,5 +7,6 @@ public enum NotificationType {
     TRIP_INVITE,
     MEMBER_KICKED,
     SYSTEM,
-    SETTLEMENT_CREATED
+    SETTLEMENT_CREATED,
+    ITINERARY
 }

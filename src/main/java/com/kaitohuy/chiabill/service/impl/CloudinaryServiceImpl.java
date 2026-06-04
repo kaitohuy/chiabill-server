@@ -45,6 +45,25 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         }
     }
 
+    @Override
+    public String uploadImageFromUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.trim().isEmpty() || imageUrl.contains("cloudinary.com")) {
+            return imageUrl;
+        }
+
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> uploadResult = cloudinary.uploader().upload(imageUrl,
+                    ObjectUtils.asMap(
+                            "folder", "chiabill_uploads"
+                    ));
+            return uploadResult.get("secure_url").toString();
+        } catch (Exception e) {
+            log.error("Cloudinary Error uploading image from URL {}: ", imageUrl, e);
+            return imageUrl;
+        }
+    }
+
     @org.springframework.scheduling.annotation.Async
     @Override
     public void deleteImage(String secureUrl) {

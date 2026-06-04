@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chính sách bảo mật - ChiaBill</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8bc34a;
+            --primary-dark: #689f38;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 1.5rem;
+            padding: 3rem 2rem;
+            box-shadow: 0 10px 25px -5px rgba(100, 116, 139, 0.08);
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1.5rem;
+        }
+
+        .logo {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .date {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            color: var(--text);
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            border-left: 4px solid var(--primary);
+            padding-left: 0.75rem;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            text-align: justify;
+        }
+
+        ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            padding-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">ChiaBill</div>
+            <h1>Chính sách bảo mật</h1>
+            <div class="date">Cập nhật lần cuối: Ngày 04 tháng 06 năm 2026</div>
+        </div>
+
+        <p>Chào mừng bạn đến với <strong>ChiaBill</strong>. Quyền riêng tư của bạn là ưu tiên hàng đầu của chúng tôi. Chính sách bảo mật này giải thích cách chúng tôi thu thập, sử dụng, tiết lộ và bảo vệ thông tin của bạn khi bạn sử dụng ứng dụng di động ChiaBill.</p>
+
+        <h2>1. Thông tin chúng tôi thu thập</h2>
+        <p>Khi bạn sử dụng ứng dụng ChiaBill, chúng tôi thu thập một số thông tin cá nhân cơ bản để phục vụ cho các tính năng của ứng dụng:</p>
+        <ul>
+            <li><strong>Thông tin tài khoản:</strong> Tên hiển thị, địa chỉ email, và số điện thoại được bạn tự nguyện cung cấp khi thiết lập hồ sơ hoặc liên kết qua tài khoản Google.</li>
+            <li><strong>Thông tin thanh toán tĩnh:</strong> Thông tin số tài khoản ngân hàng và mã QR thanh toán do bạn tải lên để phục vụ chức năng tạo mã VietQR nhanh nhằm chia tiền hóa đơn nhóm.</li>
+            <li><strong>Dữ liệu ứng dụng tạo ra:</strong> Các thông tin về chuyến đi, các khoản chi phí, giao dịch thanh toán trong nhóm do bạn tạo ra hoặc đóng góp.</li>
+            <li><strong>Đăng nhập ẩn danh:</strong> Nếu sử dụng đăng nhập ẩn danh, chúng tôi chỉ lưu một mã định danh tạm thời để liên kết dữ liệu thiết bị của bạn.</li>
+        </ul>
+
+        <h2>2. Cách chúng tôi sử dụng thông tin</h2>
+        <p>Chúng tôi chỉ sử dụng thông tin thu thập được cho các mục đích sau:</p>
+        <ul>
+            <li>Duy trì và cung cấp các dịch vụ cốt lõi của ứng dụng (Tạo nhóm, lập hóa đơn, tính toán chia tiền).</li>
+            <li>Gửi thông báo đẩy (Push Notifications) về các sự thay đổi hóa đơn, chuyến đi trong nhóm thông qua Firebase Cloud Messaging.</li>
+            <li>Cho phép những người dùng khác thêm bạn vào nhóm dựa trên email hoặc số điện thoại của bạn (nếu được bạn cho phép trong phần cấu hình riêng tư).</li>
+            <li>Không mua bán, trao đổi hoặc cung cấp dữ liệu cá nhân của bạn cho bên thứ ba vì bất kỳ mục đích quảng cáo thương mại nào.</li>
+        </ul>
+
+        <h2>3. Bảo mật thông tin</h2>
+        <p>Chúng tôi triển khai các biện pháp bảo mật tiêu chuẩn công nghiệp nhằm bảo vệ thông tin cá nhân của bạn chống lại việc truy cập, thay đổi hoặc tiết lộ trái phép. Toàn bộ đường truyền kết nối giữa ứng dụng và máy chủ đều được mã hóa bằng giao thức SSL/HTTPS an toàn.</p>
+
+        <h2>4. Quyền của bạn và Xóa dữ liệu</h2>
+        <p>Bạn có toàn quyền kiểm soát thông tin cá nhân của mình:</p>
+        <ul>
+            <li>Bạn có thể cập nhật hoặc sửa đổi thông tin cá nhân trực tiếp từ trang cấu hình Hồ sơ cá nhân trong app.</li>
+            <li><strong>Quyền yêu cầu xóa tài khoản:</strong> Bạn có thể xóa tài khoản bất cứ lúc nào trực tiếp từ màn hình Hồ sơ cá nhân trong ứng dụng hoặc bằng cách gửi yêu cầu trực tuyến thông qua trang <a href="/delete-account-request" target="_blank" style="color: var(--primary-dark); text-decoration: underline;">Yêu cầu xóa tài khoản</a> của chúng tôi. Khi tài khoản bị xóa, mọi thông tin định danh cá nhân sẽ được xóa vĩnh viễn hoặc vô danh hóa khỏi cơ sở dữ liệu của chúng tôi.</li>
+        </ul>
+
+        <h2>5. Thay đổi chính sách bảo mật này</h2>
+        <p>Chúng tôi có thể cập nhật chính sách bảo mật này theo thời gian. Mọi thay đổi sẽ được công bố trên trang này và cập nhật ngày hiệu lực ở trên cùng. Việc tiếp tục sử dụng ứng dụng đồng nghĩa với việc bạn đồng ý với các thay đổi đó.</p>
+
+        <h2>6. Liên hệ chúng tôi</h2>
+        <p>Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào về Chính sách bảo mật này, xin vui lòng gửi phản hồi trực tiếp qua phần "Báo cáo lỗi & Góp ý" trong ứng dụng của bạn.</p>
+
+        <div class="footer">
+            &copy; 2026 ChiaBill. Bảo lưu mọi quyền.
+        </div>
+    </div>
+</body>
+</html>

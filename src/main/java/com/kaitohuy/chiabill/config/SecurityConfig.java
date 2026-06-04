@@ -31,6 +31,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/invites/*").permitAll()
                         .requestMatchers("/.well-known/assetlinks.json").permitAll()
                         .requestMatchers("/join/**").permitAll()
+                        .requestMatchers("/privacy-policy", "/delete-account-request").permitAll()
                         .requestMatchers("/images/**", "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
                 )

@@ -43,4 +43,6 @@ public interface TripService {
     void kickMember(Long tripId, Long ownerId, Long targetUserId, boolean forgiveDebt);
 
     void activateMember(Long tripId, Long ownerId, Long targetUserId);
+
+    TripResponse updateTripCover(Long tripId, Long userId, org.springframework.web.multipart.MultipartFile file);
 }

@@ -20,6 +20,9 @@ import java.time.LocalDateTime;
 import org.springframework.scheduling.annotation.Async;
 import java.util.List;
 
+import com.kaitohuy.chiabill.repository.TripRepository;
+import com.kaitohuy.chiabill.entity.Trip;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -28,6 +31,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserDeviceTokenRepository tokenRepository;
     private final NotificationMapper notificationMapper;
+    private final TripRepository tripRepository;
 
     @Override
     @Transactional
@@ -75,16 +79,49 @@ public class NotificationServiceImpl implements NotificationService {
         // 3. Send via FCM
         for (UserDeviceToken deviceToken : tokens) {
             try {
-                Message message = Message.builder()
-                        .setToken(deviceToken.getToken())
-                        .setNotification(com.google.firebase.messaging.Notification.builder()
-                                .setTitle(title)
-                                .setBody(body)
-                                .build())
-                        .putData("type", type.name())
-                        .putData("referenceId", String.valueOf(referenceId))
-                        .build();
+                boolean isAndroid = "ANDROID".equalsIgnoreCase(deviceToken.getPlatform());
 
+                Message.Builder messageBuilder = Message.builder()
+                        .setToken(deviceToken.getToken())
+                        .putData("title", title)
+                        .putData("body", body)
+                        .putData("type", type.name())
+                        .putData("referenceId", String.valueOf(referenceId));
+
+                if (isAndroid) {
+                    AndroidConfig androidConfig = AndroidConfig.builder()
+                            .setPriority(AndroidConfig.Priority.HIGH)
+                            .build();
+                    messageBuilder.setAndroidConfig(androidConfig);
+                } else {
+                    AndroidConfig androidConfig = AndroidConfig.builder()
+                            .setPriority(AndroidConfig.Priority.HIGH)
+                            .setNotification(AndroidNotification.builder()
+                                    .setChannelId("high_importance_channel")
+                                    .setPriority(AndroidNotification.Priority.HIGH)
+                                    .setVisibility(AndroidNotification.Visibility.PUBLIC)
+                                    .setDefaultSound(true)
+                                    .setColor("#10B981") // Màu xanh Emerald đặc trưng của app
+                                    .build())
+                            .build();
+
+                    ApnsConfig apnsConfig = ApnsConfig.builder()
+                            .setAps(Aps.builder()
+                                    .setSound("default")
+                                    .setContentAvailable(true)
+                                    .build())
+                            .build();
+
+                    messageBuilder
+                            .setNotification(com.google.firebase.messaging.Notification.builder()
+                                    .setTitle(title)
+                                    .setBody(body)
+                                    .build())
+                            .setAndroidConfig(androidConfig)
+                            .setApnsConfig(apnsConfig);
+                }
+
+                Message message = messageBuilder.build();
                 FirebaseMessaging.getInstance().send(message);
                 log.info("Notification sent successfully to user {} on device {}", receiver.getEmail(), deviceToken.getPlatform());
             } catch (FirebaseMessagingException e) {
