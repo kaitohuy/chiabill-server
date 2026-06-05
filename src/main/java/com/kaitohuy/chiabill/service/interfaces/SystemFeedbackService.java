@@ -8,4 +8,5 @@ import org.springframework.data.domain.Pageable;
 public interface SystemFeedbackService {
     SystemFeedbackResponse saveFeedback(Long userId, SystemFeedbackRequest request);
     PageResponse<SystemFeedbackResponse> getFeedbacks(Pageable pageable);
+    void deleteFeedback(Long id);
 }

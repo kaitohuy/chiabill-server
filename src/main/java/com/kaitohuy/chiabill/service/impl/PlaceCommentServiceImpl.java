@@ -140,16 +140,26 @@ public class PlaceCommentServiceImpl implements PlaceCommentService {
         PlaceComment comment = placeCommentRepository.findById(commentId)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy bình luận"));
 
-        // Let creator of the comment OR the creator of the Place delete the comment
+        User actor = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng"));
+        boolean isAdmin = "ADMIN".equals(actor.getRole());
+
+        // Let creator of the comment OR the creator of the Place OR admin delete the comment
         boolean isCommentOwner = comment.getUser().getId().equals(userId);
         boolean isPlaceOwner = comment.getPlace().getCreator() != null && comment.getPlace().getCreator().getId().equals(userId);
 
-        if (comment.getIsDeleted() || (!isCommentOwner && !isPlaceOwner)) {
+        if (comment.getIsDeleted() || (!isCommentOwner && !isPlaceOwner && !isAdmin)) {
             throw new BusinessException("Không có quyền xóa");
         }
 
         comment.setIsDeleted(true);
         placeCommentRepository.save(comment);
+    }
+
+    @Override
+    public Page<PlaceCommentResponse> getAllComments(Pageable pageable) {
+        return placeCommentRepository.findAllByIsDeletedFalse(pageable)
+                .map(comment -> mapToResponse(comment, null));
     }
 
     private PlaceCommentResponse mapToResponse(PlaceComment comment, Long currentUserId) {

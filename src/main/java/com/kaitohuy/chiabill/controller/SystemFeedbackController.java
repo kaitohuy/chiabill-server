@@ -37,4 +37,10 @@ public class SystemFeedbackController {
         PageResponse<SystemFeedbackResponse> response = feedbackService.getFeedbacks(PageRequest.of(page, size));
         return ResponseEntity.ok(new ApiResponse<>(true, response, "Lấy danh sách phản hồi thành công"));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteFeedback(@PathVariable Long id) {
+        feedbackService.deleteFeedback(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, null, "Xóa phản hồi thành công"));
+    }
 }

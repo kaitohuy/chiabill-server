@@ -107,4 +107,28 @@ public class PlaceController {
                 )
         );
     }
+
+    @GetMapping("/reports")
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<com.kaitohuy.chiabill.dto.response.PlaceReportResponse>>> getReports(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                placeReportService.getReports(org.springframework.data.domain.PageRequest.of(page, size)),
+                "Lấy danh sách báo cáo thành công"
+        ));
+    }
+
+    @PutMapping("/reports/{id}/approve")
+    public ResponseEntity<ApiResponse<Void>> approveReport(@PathVariable Long id) {
+        placeReportService.approveReport(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, null, "Chấp thuận báo cáo thành công"));
+    }
+
+    @PutMapping("/reports/{id}/reject")
+    public ResponseEntity<ApiResponse<Void>> rejectReport(@PathVariable Long id) {
+        placeReportService.rejectReport(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, null, "Bác bỏ báo cáo thành công"));
+    }
 }

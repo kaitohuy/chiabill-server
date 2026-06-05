@@ -13,4 +13,6 @@ public interface PlaceCommentRepository extends JpaRepository<PlaceComment, Long
     List<PlaceComment> findAllByParentIdAndIsDeletedFalse(Long parentId);
     
     java.util.Optional<PlaceComment> findFirstByUserIdOrderByCreatedAtDesc(Long userId);
+
+    Page<PlaceComment> findAllByIsDeletedFalse(Pageable pageable);
 }

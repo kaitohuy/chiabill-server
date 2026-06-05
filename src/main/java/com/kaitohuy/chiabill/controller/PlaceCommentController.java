@@ -75,4 +75,13 @@ public class PlaceCommentController {
         placeCommentService.deleteComment(commentId, userDetails.getUserId());
         return ResponseEntity.ok(new ApiResponse<>(true, null, null));
     }
+
+    @GetMapping("/admin/comments")
+    public ResponseEntity<ApiResponse<Page<PlaceCommentResponse>>> getAllComments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Page<PlaceCommentResponse> response = placeCommentService.getAllComments(PageRequest.of(page, size));
+        return ResponseEntity.ok(new ApiResponse<>(true, response, "Lấy tất cả bình luận thành công"));
+    }
 }

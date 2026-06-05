@@ -98,8 +98,12 @@ public class PlaceServiceImpl implements PlaceService {
         Place place = placeRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy địa điểm"));
 
-        // Check permission: Only creator can update. Admin logic can be added later.
-        if (place.getCreator() == null || !place.getCreator().getId().equals(userId)) {
+        User actor = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng"));
+        boolean isAdmin = "ADMIN".equals(actor.getRole());
+
+        // Check permission: Only creator or admin can update.
+        if (!isAdmin && (place.getCreator() == null || !place.getCreator().getId().equals(userId))) {
             throw new BusinessException("Không có quyền chỉnh sửa");
         }
 
@@ -137,7 +141,11 @@ public class PlaceServiceImpl implements PlaceService {
         Place place = placeRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy địa điểm"));
 
-        if (place.getCreator() == null || !place.getCreator().getId().equals(userId)) {
+        User actor = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng"));
+        boolean isAdmin = "ADMIN".equals(actor.getRole());
+
+        if (!isAdmin && (place.getCreator() == null || !place.getCreator().getId().equals(userId))) {
             throw new BusinessException("Không có quyền xóa");
         }
 

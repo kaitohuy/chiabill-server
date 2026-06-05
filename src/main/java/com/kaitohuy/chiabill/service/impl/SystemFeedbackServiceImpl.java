@@ -46,4 +46,13 @@ public class SystemFeedbackServiceImpl implements SystemFeedbackService {
         Page<SystemFeedbackResponse> responsePage = entityPage.map(feedbackMapper::toResponse);
         return PageResponse.from(responsePage);
     }
+
+    @Override
+    @Transactional
+    public void deleteFeedback(Long id) {
+        SystemFeedback feedback = feedbackRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy phản hồi"));
+        feedback.setIsDeleted(true);
+        feedbackRepository.save(feedback);
+    }
 }

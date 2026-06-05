@@ -17,4 +17,6 @@ public interface PlaceCommentService {
     PlaceCommentResponse updateComment(Long commentId, PlaceCommentRequest request, Long userId);
     
     void deleteComment(Long commentId, Long userId);
+
+    Page<PlaceCommentResponse> getAllComments(Pageable pageable);
 }

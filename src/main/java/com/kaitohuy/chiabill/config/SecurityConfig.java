@@ -29,6 +29,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/categories/seed").permitAll()
                         .requestMatchers("/api/v1/admin/seed/places", "/api/admin/seed/places", "/admin/seed/places").permitAll()
                         .requestMatchers("/healthz").permitAll()
+                        .requestMatchers("/api/v1/places/reports/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/places/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/places/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/invites/*").permitAll()
                         .requestMatchers("/.well-known/assetlinks.json").permitAll()
