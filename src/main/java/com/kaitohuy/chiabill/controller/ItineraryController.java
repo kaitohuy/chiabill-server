@@ -129,4 +129,17 @@ public class ItineraryController {
                 .message("Cập nhật cài đặt báo thức thành công")
                 .build();
     }
+
+    @PostMapping("/import-from/{sourceTripId}")
+    public ApiResponse<List<ItineraryItemResponse>> importFromOtherTrip(
+            @PathVariable Long tripId,
+            @PathVariable Long sourceTripId,
+            Authentication authentication) {
+        Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
+        return ApiResponse.<List<ItineraryItemResponse>>builder()
+                .success(true)
+                .data(itineraryService.cloneItinerary(tripId, userId, sourceTripId))
+                .message("Sao chép lịch trình từ chuyến đi khác thành công")
+                .build();
+    }
 }

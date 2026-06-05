@@ -57,6 +57,10 @@ public class User extends BaseEntity {
     @Column(nullable = false, columnDefinition = "boolean default true")
     private Boolean allowAutoApprovePayment = true;
 
+    @Builder.Default
+    @Column(nullable = false, length = 50)
+    private String role = "USER";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "managed_by")
     private User managedBy;

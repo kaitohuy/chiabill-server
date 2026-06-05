@@ -33,6 +33,8 @@ public class SecurityConfig {
                         .requestMatchers("/join/**").permitAll()
                         .requestMatchers("/privacy-policy", "/delete-account-request").permitAll()
                         .requestMatchers("/images/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/feedbacks").authenticated()
+                        .requestMatchers("/api/feedbacks/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter,

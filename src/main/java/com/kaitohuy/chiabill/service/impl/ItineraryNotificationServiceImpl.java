@@ -65,14 +65,28 @@ public class ItineraryNotificationServiceImpl implements ItineraryNotificationSe
     public void rescheduleAlarmsForTrip(Long tripId) {
         List<TripMember> activeMembers = memberRepository.findActiveMembersWithUser(tripId);
         log.info("Rescheduling itinerary alarms for all {} active members of trip {}", activeMembers.size(), tripId);
+        if (activeMembers.isEmpty()) return;
+
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip == null) return;
+
+        List<ItineraryItem> items = itineraryItemRepository.findActiveItineraryByTripId(tripId);
+
         for (TripMember member : activeMembers) {
-            rescheduleAlarmsForMember(tripId, member.getUser().getId());
+            rescheduleAlarmsForMemberShared(tripId, member.getUser().getId(), trip, items);
         }
     }
 
     @Override
     @Transactional
     public void rescheduleAlarmsForMember(Long tripId, Long userId) {
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip == null) return;
+        List<ItineraryItem> items = itineraryItemRepository.findActiveItineraryByTripId(tripId);
+        rescheduleAlarmsForMemberShared(tripId, userId, trip, items);
+    }
+
+    private void rescheduleAlarmsForMemberShared(Long tripId, Long userId, Trip trip, List<ItineraryItem> items) {
         // 1. Delete existing unsent notifications for this member and trip
         scheduledNotificationRepository.deleteUnsentByTripIdAndUserId(tripId, userId);
 
@@ -88,18 +102,13 @@ public class ItineraryNotificationServiceImpl implements ItineraryNotificationSe
             return;
         }
 
-        // 3. Load active itinerary items
-        List<ItineraryItem> items = itineraryItemRepository.findActiveItineraryByTripId(tripId);
         if (items.isEmpty()) {
             return;
         }
 
-        Trip trip = tripRepository.findById(tripId).orElse(null);
-        if (trip == null) return;
-
         LocalDateTime baseDate = trip.getStartDate() != null ? trip.getStartDate() : LocalDateTime.now();
 
-        // 4. Generate scheduled notifications
+        // 3. Generate scheduled notifications
         for (ItineraryItem item : items) {
             LocalDateTime scheduledTime = calculateScheduledTime(baseDate, item.getDayNumber(), item.getTimeRange(), 
                     settings.getAlarmValue(), settings.getAlarmUnit());

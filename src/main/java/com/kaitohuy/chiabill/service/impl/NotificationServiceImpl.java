@@ -76,6 +76,17 @@ public class NotificationServiceImpl implements NotificationService {
             return;
         }
 
+        // Lấy coverUrl từ chuyến đi (nếu có)
+        String imageUrl = null;
+        if (referenceId != null && (type == NotificationType.ITINERARY 
+                || type == NotificationType.EXPENSE_CREATED 
+                || type == NotificationType.PAYMENT_REQUESTED 
+                || type == NotificationType.PAYMENT_APPROVED)) {
+            imageUrl = tripRepository.findById(referenceId)
+                    .map(Trip::getCoverUrl)
+                    .orElse(null);
+        }
+
         // 3. Send via FCM
         for (UserDeviceToken deviceToken : tokens) {
             try {
@@ -87,6 +98,10 @@ public class NotificationServiceImpl implements NotificationService {
                         .putData("body", body)
                         .putData("type", type.name())
                         .putData("referenceId", String.valueOf(referenceId));
+
+                if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                    messageBuilder.putData("imageUrl", imageUrl);
+                }
 
                 if (isAndroid) {
                     AndroidConfig androidConfig = AndroidConfig.builder()
@@ -112,11 +127,16 @@ public class NotificationServiceImpl implements NotificationService {
                                     .build())
                             .build();
 
-                    messageBuilder
-                            .setNotification(com.google.firebase.messaging.Notification.builder()
+                    com.google.firebase.messaging.Notification.Builder notificationBuilder = 
+                            com.google.firebase.messaging.Notification.builder()
                                     .setTitle(title)
-                                    .setBody(body)
-                                    .build())
+                                    .setBody(body);
+                    if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                        notificationBuilder.setImage(imageUrl);
+                    }
+
+                    messageBuilder
+                            .setNotification(notificationBuilder.build())
                             .setAndroidConfig(androidConfig)
                             .setApnsConfig(apnsConfig);
                 }

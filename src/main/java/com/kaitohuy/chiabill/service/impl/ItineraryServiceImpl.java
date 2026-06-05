@@ -145,6 +145,45 @@ public class ItineraryServiceImpl implements ItineraryService {
         }
     }
 
+    @Override
+    @Transactional
+    public List<ItineraryItemResponse> cloneItinerary(Long tripId, Long userId, Long sourceTripId) {
+        validateActiveMember(tripId, userId);
+        validateActiveMember(sourceTripId, userId);
+
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new BusinessException("Trip not found"));
+
+        List<ItineraryItem> sourceItems = itineraryItemRepository.findActiveItineraryByTripId(sourceTripId);
+
+        itineraryItemRepository.hardDeleteByTripId(tripId);
+
+        if (sourceItems == null || sourceItems.isEmpty()) {
+            itineraryNotificationService.rescheduleAlarmsForTrip(tripId);
+            return List.of();
+        }
+
+        List<ItineraryItem> itemsToSave = sourceItems.stream()
+                .map(item -> ItineraryItem.builder()
+                        .trip(trip)
+                        .dayNumber(item.getDayNumber())
+                        .timeRange(item.getTimeRange())
+                        .activity(item.getActivity())
+                        .location(item.getLocation())
+                        .note(item.getNote())
+                        .estimatedCost(item.getEstimatedCost())
+                        .build())
+                .collect(Collectors.toList());
+
+        List<ItineraryItem> savedItems = itineraryItemRepository.saveAll(itemsToSave);
+
+        itineraryNotificationService.rescheduleAlarmsForTrip(tripId);
+
+        return savedItems.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     private ItineraryItemResponse mapToResponse(ItineraryItem item) {
         return ItineraryItemResponse.builder()
                 .id(item.getId())

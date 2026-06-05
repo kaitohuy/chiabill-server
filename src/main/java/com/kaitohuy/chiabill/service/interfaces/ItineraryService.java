@@ -10,4 +10,5 @@ public interface ItineraryService {
     List<ItineraryItemResponse> saveItineraryBulk(Long tripId, Long userId, List<SaveItineraryRequest> requests);
     ItineraryItemResponse saveItineraryItem(Long tripId, Long userId, SaveItineraryRequest request);
     void deleteItineraryItem(Long tripId, Long itemId, Long userId);
+    List<ItineraryItemResponse> cloneItinerary(Long tripId, Long userId, Long sourceTripId);
 }
