@@ -5,12 +5,14 @@ import com.kaitohuy.chiabill.dto.response.ExpenseCategoryResponse;
 import com.kaitohuy.chiabill.security.UserPrincipal;
 import com.kaitohuy.chiabill.service.interfaces.CategoryService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
@@ -45,6 +47,7 @@ public class CategoryController {
     @PostMapping("/seed")
     public ApiResponse<String> seedDefaults() {
         categoryService.seedDefaultCategories();
+        log.info("seedDefaults success");
         return ApiResponse.<String>builder()
                 .success(true)
                 .message("Default categories seeded")

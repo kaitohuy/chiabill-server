@@ -4,15 +4,15 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableAsync
-@org.springframework.scheduling.annotation.EnableScheduling
+@EnableScheduling
 public class ChiaBillApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(ChiaBillApplication.class, args);
-		System.out.println("DB_URL=" + System.getenv("DB_URL"));
 	}
 
 }

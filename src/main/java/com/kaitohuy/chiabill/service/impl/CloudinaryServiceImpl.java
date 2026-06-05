@@ -55,7 +55,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             @SuppressWarnings("unchecked")
             Map<String, Object> uploadResult = cloudinary.uploader().upload(imageUrl,
                     ObjectUtils.asMap(
-                            "folder", "chiabill_uploads"
+                            "folder", "chiabill_uploads_places"
                     ));
             return uploadResult.get("secure_url").toString();
         } catch (Exception e) {

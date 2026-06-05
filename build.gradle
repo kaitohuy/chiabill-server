@@ -53,3 +53,18 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+bootRun {
+	if (file(".env").exists()) {
+		file(".env").readLines().each {
+			if (!it.isEmpty() && !it.startsWith("#")) {
+				def pos = it.indexOf("=")
+				if (pos > 0) {
+					def key = it.substring(0, pos).trim()
+					def val = it.substring(pos + 1).trim()
+					environment key, val
+				}
+			}
+		}
+	}
+}
