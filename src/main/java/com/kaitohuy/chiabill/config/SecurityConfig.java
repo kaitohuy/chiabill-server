@@ -19,6 +19,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
+                .cors(org.springframework.security.config.Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -26,6 +27,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("api/categories/seed").permitAll()
+                        .requestMatchers("/api/v1/admin/seed/places", "/api/admin/seed/places", "/admin/seed/places").permitAll()
                         .requestMatchers("/healthz").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/places/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/invites/*").permitAll()
