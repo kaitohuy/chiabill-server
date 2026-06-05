@@ -26,7 +26,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("api/categories/seed").permitAll()
+                        .requestMatchers("/api/categories/seed").permitAll()
                         .requestMatchers("/api/v1/admin/seed/places", "/api/admin/seed/places", "/admin/seed/places").permitAll()
                         .requestMatchers("/healthz").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/places/**").permitAll()
