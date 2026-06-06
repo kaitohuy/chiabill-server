@@ -28,12 +28,12 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/categories/seed").permitAll()
-                        .requestMatchers("/api/v1/admin/seed/places", "/api/admin/seed/places", "/admin/seed/places").permitAll()
+                        .requestMatchers("/api/categories/seed").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/admin/seed/places", "/api/admin/seed/places", "/admin/seed/places").hasRole("ADMIN")
                         .requestMatchers("/healthz").permitAll()
                         .requestMatchers("/api/v1/places/reports/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/places/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/places/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/places/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/invites/*").permitAll()
                         .requestMatchers("/.well-known/assetlinks.json").permitAll()
                         .requestMatchers("/join/**").permitAll()
@@ -44,7 +44,19 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+                        UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"success\":false,\"message\":\"Yêu cầu đăng nhập để thực hiện chức năng này\",\"data\":null}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+                            response.getWriter().write("{\"success\":false,\"message\":\"Bạn không có quyền thực hiện hành động này\",\"data\":null}");
+                        })
+                );
 
         return http.build();
     }

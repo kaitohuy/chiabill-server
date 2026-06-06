@@ -16,4 +16,5 @@ public class UserResponse {
     private String phone;
     private Boolean allowAutoAdd;
     private Boolean allowAutoApprovePayment;
+    private String role;
 }
