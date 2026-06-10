@@ -6,12 +6,16 @@ import com.kaitohuy.chiabill.dto.request.SplitRequest;
 import com.kaitohuy.chiabill.dto.request.UpdateExpenseRequest;
 import com.kaitohuy.chiabill.dto.response.ExpenseResponse;
 import com.kaitohuy.chiabill.dto.response.PageResponse;
+import com.kaitohuy.chiabill.dto.response.ScanReceiptResponse;
 import com.kaitohuy.chiabill.entity.*;
 import com.kaitohuy.chiabill.exception.BusinessException;
 import com.kaitohuy.chiabill.mapper.ExpenseMapper;
 import com.kaitohuy.chiabill.repository.*;
 import com.kaitohuy.chiabill.repository.specification.ExpenseSpecification;
+import com.kaitohuy.chiabill.service.interfaces.CloudinaryService;
+import com.kaitohuy.chiabill.service.interfaces.GeminiService;
 import com.kaitohuy.chiabill.service.interfaces.NotificationService;
+import com.kaitohuy.chiabill.service.interfaces.TripHistoryService;
 import com.kaitohuy.chiabill.utils.CurrencyUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -35,11 +39,12 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
     private final TripMemberRepository tripMemberRepository;
     private final ExpenseCategoryRepository categoryRepository;
     private final NotificationService notificationService;
-    private final com.kaitohuy.chiabill.service.interfaces.CloudinaryService cloudinaryService;
-    private final com.kaitohuy.chiabill.service.interfaces.TripHistoryService tripHistoryService;
+    private final CloudinaryService cloudinaryService;
+    private final TripHistoryService tripHistoryService;
 
-    private final com.kaitohuy.chiabill.repository.GroupFundRepository fundRepository;
+    private final GroupFundRepository fundRepository;
     private final ExpenseMapper expenseMapper;
+    private final GeminiService geminiService;
 
     @Override
     @Transactional
@@ -471,5 +476,103 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
     @Override
     public java.math.BigDecimal getLatestExchangeRate(String currency) {
         return expenseRepository.findLatestExchangeRateByCurrency(currency);
+    }
+
+    @Override
+    public ScanReceiptResponse scanReceipt(Long tripId, Long userId, org.springframework.web.multipart.MultipartFile file) {
+        // 1. Verify member
+        boolean isMember = tripMemberRepository.existsByTripIdAndUserId(tripId, userId);
+        if (!isMember) {
+            throw new BusinessException("Bạn không phải thành viên của chuyến đi này");
+        }
+
+        // 2. Fetch categories for trip
+        List<ExpenseCategory> categories = categoryRepository.findAllByTripIdOrSystem(tripId)
+                .stream()
+                .filter(ec -> !Boolean.TRUE.equals(ec.getIsDeleted()))
+                .toList();
+
+        List<String> categoryNames = categories.stream()
+                .map(ExpenseCategory::getName)
+                .toList();
+
+        try {
+            // 3. Call Gemini service
+            byte[] imageBytes = file.getBytes();
+            String mimeType = file.getContentType();
+            
+            Map<String, Object> geminiResult = geminiService.scanReceipt(imageBytes, mimeType, categoryNames);
+
+            // Kiểm tra ảnh có phải hóa đơn hợp lệ không
+            Object isReceiptObj = geminiResult.get("isReceipt");
+            if (isReceiptObj != null) {
+                boolean isReceipt = Boolean.parseBoolean(isReceiptObj.toString());
+                if (!isReceipt) {
+                    throw new BusinessException("Hình ảnh tải lên không chứa thông tin hóa đơn hoặc biên lai chi tiêu. Vui lòng chọn lại ảnh hoặc nhập tay thông tin.");
+                }
+            }
+
+            // 4. Map values
+            BigDecimal totalAmount = BigDecimal.ZERO;
+            Object amountObj = geminiResult.get("totalAmount");
+            if (amountObj != null) {
+                try {
+                    totalAmount = new BigDecimal(amountObj.toString());
+                } catch (Exception e) {
+                    // Fallback parse if Gemini returns string with formatting
+                    String cleanAmount = amountObj.toString().replaceAll("[^\\d.]", "");
+                    if (!cleanAmount.isEmpty()) {
+                        totalAmount = new java.math.BigDecimal(cleanAmount);
+                    }
+                }
+            }
+
+            String description = (String) geminiResult.get("description");
+            if (description == null) {
+                description = "";
+            }
+
+            String matchedCategoryName = (String) geminiResult.get("categoryName");
+            ExpenseCategory matchedCategory = null;
+            if (matchedCategoryName != null) {
+                String cleanMatchedName = matchedCategoryName.trim();
+                matchedCategory = categories.stream()
+                        .filter(ec -> ec.getName().equalsIgnoreCase(cleanMatchedName))
+                        .findFirst()
+                        .orElse(null);
+                
+                if (matchedCategory == null) {
+                    matchedCategory = categories.stream()
+                            .filter(ec -> ec.getName().toLowerCase().contains(cleanMatchedName.toLowerCase()))
+                            .findFirst()
+                            .orElse(null);
+                }
+            }
+
+            // Fallback to miscellaneous/other if no category matched
+            if (matchedCategory == null) {
+                matchedCategory = categories.stream()
+                        .filter(ec -> ec.getName().toLowerCase().contains("phát sinh") || ec.getName().toLowerCase().contains("khác"))
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            if (matchedCategory == null && !categories.isEmpty()) {
+                matchedCategory = categories.get(0);
+            }
+
+            return com.kaitohuy.chiabill.dto.response.ScanReceiptResponse.builder()
+                    .totalAmount(totalAmount)
+                    .description(description)
+                    .categoryId(matchedCategory != null ? matchedCategory.getId() : null)
+                    .categoryName(matchedCategory != null ? matchedCategory.getName() : null)
+                    .categoryIcon(matchedCategory != null ? matchedCategory.getIcon() : null)
+                    .build();
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException("Lỗi đọc dữ liệu hóa đơn: " + e.getMessage());
+        }
     }
 }

@@ -178,6 +178,7 @@ public class PlaceCommentServiceImpl implements PlaceCommentService {
         return PlaceCommentResponse.builder()
                 .id(comment.getId())
                 .placeId(comment.getPlace().getId())
+                .placeName(comment.getPlace().getName())
                 .user(userResponse)
                 .content(comment.getContent())
                 .parentId(comment.getParentId())

@@ -18,4 +18,10 @@ public interface UserService {
     void deleteMyAccount(Long userId);
 
     void deleteAccountByEmailOrPhone(String email, String phone);
+
+    com.kaitohuy.chiabill.dto.response.UserStatsResponse getUserStats();
+
+    org.springframework.data.domain.Page<com.kaitohuy.chiabill.dto.response.UserResponse> searchUsers(String keyword, org.springframework.data.domain.Pageable pageable);
+
+    void adminDeleteUser(Long userId);
 }

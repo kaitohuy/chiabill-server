@@ -25,6 +25,7 @@ public class ExpenseResponse {
     private Boolean isFromFund;
     private String clientUuid;
     private String splitType;
+    private String receiptUrl;
 
     private List<SplitResponse> splits;
 }

@@ -27,4 +27,6 @@ public interface ExpenseService {
     List<com.kaitohuy.chiabill.dto.response.TripStatResponse> getOverallExpenseStats(Long userId, Integer month, Integer year);
 
     BigDecimal getLatestExchangeRate(String currency);
+
+    com.kaitohuy.chiabill.dto.response.ScanReceiptResponse scanReceipt(Long tripId, Long userId, org.springframework.web.multipart.MultipartFile file);
 }

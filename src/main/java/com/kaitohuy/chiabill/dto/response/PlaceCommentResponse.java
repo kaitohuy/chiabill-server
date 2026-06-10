@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class PlaceCommentResponse {
     private Long id;
     private Long placeId;
+    private String placeName;
     private UserResponse user;
     private String content;
     private Long parentId;

@@ -190,4 +190,28 @@ public class UserServiceImpl implements UserService {
         
         userRepository.save(user);
     }
+
+    @Override
+    public com.kaitohuy.chiabill.dto.response.UserStatsResponse getUserStats() {
+        return com.kaitohuy.chiabill.dto.response.UserStatsResponse.builder()
+                .totalUsers(userRepository.countByIsDeletedFalse())
+                .ghostUsers(userRepository.countByIsGhostTrueAndIsDeletedFalse())
+                .anonymousUsers(userRepository.countByIsAnonymousTrueAndIsDeletedFalse())
+                .activeUsers(userRepository.countByIsAnonymousFalseAndIsGhostFalseAndIsDeletedFalse())
+                .build();
+    }
+
+    @Override
+    public org.springframework.data.domain.Page<UserResponse> searchUsers(String keyword, org.springframework.data.domain.Pageable pageable) {
+        return userRepository.searchUsers(keyword, pageable)
+                .map(userMapper::toResponse);
+    }
+
+    @Override
+    @Transactional
+    public void adminDeleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("User not found"));
+        performSoftDelete(user);
+    }
 }

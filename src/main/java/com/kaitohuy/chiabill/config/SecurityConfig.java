@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/images/**", "/css/**", "/js/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/feedbacks").authenticated()
                         .requestMatchers("/api/feedbacks/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter,
