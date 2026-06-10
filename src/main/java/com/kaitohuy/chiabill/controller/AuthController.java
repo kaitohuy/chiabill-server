@@ -6,6 +6,7 @@ import com.kaitohuy.chiabill.security.UserPrincipal;
 import com.kaitohuy.chiabill.service.interfaces.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -38,8 +39,9 @@ public class AuthController {
 
     @PostMapping("/google")
     public ApiResponse<AuthResponse> googleLogin(
-            @RequestBody GoogleLoginRequest request,
+            @Valid @RequestBody GoogleLoginRequest request,
             Authentication authentication) {
+
 
         Long currentUserId = null;
 

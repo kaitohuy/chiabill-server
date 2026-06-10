@@ -7,6 +7,7 @@ import com.kaitohuy.chiabill.dto.response.ApiResponse;
 import com.kaitohuy.chiabill.dto.response.TripResponse;
 import com.kaitohuy.chiabill.security.UserPrincipal;
 import com.kaitohuy.chiabill.service.interfaces.TripService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -28,8 +29,9 @@ public class TripController {
 
         @PostMapping
         public ApiResponse<TripResponse> createTrip(
-                        @RequestBody CreateTripRequest request,
+                        @Valid @RequestBody CreateTripRequest request,
                         Authentication authentication) {
+
 
                 Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
 
@@ -78,8 +80,9 @@ public class TripController {
         @PutMapping("/{tripId}")
         public ApiResponse<TripResponse> updateTrip(
                         @PathVariable Long tripId,
-                        @RequestBody UpdateTripRequest request,
+                        @Valid @RequestBody UpdateTripRequest request,
                         Authentication authentication) {
+
 
                 Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
 

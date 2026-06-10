@@ -7,6 +7,7 @@ import com.kaitohuy.chiabill.dto.response.*;
 import com.kaitohuy.chiabill.security.UserPrincipal;
 import com.kaitohuy.chiabill.service.interfaces.ExpenseService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
@@ -29,8 +30,9 @@ public class ExpenseController {
 
     @PostMapping
     public ApiResponse<ExpenseResponse> createExpense(
-            @RequestBody CreateExpenseRequest request,
+            @Valid @RequestBody CreateExpenseRequest request,
             Authentication authentication) {
+
 
         Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
 
@@ -71,8 +73,9 @@ public class ExpenseController {
     @PutMapping("/{expenseId}")
     public ApiResponse<ExpenseResponse> updateExpense(
             @PathVariable Long expenseId,
-            @RequestBody UpdateExpenseRequest request,
+            @Valid @RequestBody UpdateExpenseRequest request,
             Authentication authentication) {
+
 
         Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
 
