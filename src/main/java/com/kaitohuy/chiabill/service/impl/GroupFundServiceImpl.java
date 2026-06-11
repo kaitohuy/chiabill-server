@@ -169,8 +169,8 @@ public class GroupFundServiceImpl implements GroupFundService {
         List<ExpenseSplit> splits = createExpenseSplits(expense, allParticipants, request.getAmount());
         expense.setSplits(splits);
 
-        // Tạo các bản ghi Contribution
-        List<GroupFundContribution> contributions = createFundContributions(fund, contributors, request.getAmount(), notes);
+        // Tạo các bản ghi Contribution (có link tới expense để có thể reverse sau này)
+        List<GroupFundContribution> contributions = createFundContributions(fund, contributors, request.getAmount(), notes, expense);
 
         // Cộng số dư quỹ chung với phần của thủ quỹ
         fund.setBalance(fund.getBalance().add(request.getAmount()));
@@ -275,6 +275,7 @@ public class GroupFundServiceImpl implements GroupFundService {
                 .status(PaymentStatus.APPROVED)
                 .proofUrl(null)
                 .onBehalfOfUser(null)
+                .linkedContribution(contribution) // Link để có thể reverse khi cần
                 .build();
         
         paymentRepository.save(payment);
@@ -307,7 +308,8 @@ public class GroupFundServiceImpl implements GroupFundService {
                 .currency(fund.getCurrency())
                 .exchangeRate(BigDecimal.ONE)
                 .clientUuid(UUID.randomUUID().toString())
-                .isFromFund(false)
+                .isFromFund(false)     // Phải là false để tính vào công nợ nợ nần (mọi người nợ thủ quỹ)
+                .groupFund(fund)       // Link tới quỹ chung để tiện query/reverse
                 .build();
         return expenseRepository.save(expense);
     }
@@ -326,7 +328,7 @@ public class GroupFundServiceImpl implements GroupFundService {
         return splitRepository.saveAll(splits);
     }
 
-    private List<GroupFundContribution> createFundContributions(GroupFund fund, List<User> contributors, BigDecimal amount, String notes) {
+    private List<GroupFundContribution> createFundContributions(GroupFund fund, List<User> contributors, BigDecimal amount, String notes, Expense linkedExpense) {
         List<GroupFundContribution> contributions = contributors.stream()
                 .map(user -> GroupFundContribution.builder()
                         .groupFund(fund)
@@ -336,11 +338,12 @@ public class GroupFundServiceImpl implements GroupFundService {
                         .notes(notes)
                         .type(ContributionType.REQUIRED)
                         .isConfirmed(false)
+                        .linkedExpense(linkedExpense)
                         .build()
                 )
                 .collect(Collectors.toList());
 
-        // Tự động đóng góp phần của Thủ quỹ
+        // Tự động đóng góp phần của Thủ quỹ (auto confirm vì Thủ quỹ tự quản lý)
         GroupFundContribution treasurerContribution = GroupFundContribution.builder()
                 .groupFund(fund)
                 .contributor(fund.getTreasurer())
@@ -349,6 +352,7 @@ public class GroupFundServiceImpl implements GroupFundService {
                 .notes(notes + " (Thủ quỹ tự nộp)")
                 .type(ContributionType.REQUIRED)
                 .isConfirmed(true)
+                .linkedExpense(linkedExpense)
                 .build();
         
         contributions.add(treasurerContribution);

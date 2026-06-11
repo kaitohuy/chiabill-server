@@ -42,6 +42,12 @@ public class PaymentSpecification {
                 predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), endDate));
             }
 
+            // 6. Lọc các record chưa bị xóa
+            predicates.add(cb.or(
+                cb.isNull(root.get("isDeleted")),
+                cb.equal(root.get("isDeleted"), false)
+            ));
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }

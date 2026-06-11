@@ -42,4 +42,12 @@ public class GroupFundContribution extends BaseEntity {
     @Builder.Default
     @Column(nullable = false)
     private Boolean isConfirmed = false; // Đối với đợt thu bắt buộc, Thủ quỹ xác nhận đã nộp hay chưa
+
+    /**
+     * Link tới Expense thu quỹ tương ứng.
+     * Dùng để khi xóa Expense, backend có thể tự động reverse contribution và payment liên quan.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "linked_expense_id", nullable = true)
+    private Expense linkedExpense;
 }

@@ -43,6 +43,8 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
     private final TripHistoryService tripHistoryService;
 
     private final GroupFundRepository fundRepository;
+    private final GroupFundContributionRepository contributionRepository;
+    private final PaymentRepository paymentRepository;
     private final ExpenseMapper expenseMapper;
     private final GeminiService geminiService;
 
@@ -396,6 +398,30 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
 
         User actor = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException("Actor not found"));
+
+        // === CASCADE: Nếu expense này là đợt thu quỹ bắt buộc, reverse tất cả contributions + payments liên quan ===
+        List<GroupFundContribution> linkedContributions = contributionRepository.findByLinkedExpenseIdAndIsDeletedFalse(expenseId);
+        if (!linkedContributions.isEmpty()) {
+            GroupFund fund = linkedContributions.get(0).getGroupFund();
+            for (GroupFundContribution contribution : linkedContributions) {
+                // Nếu contribution đã được xác nhận, cần trừ lại số dư quỹ và xóa payment
+                if (Boolean.TRUE.equals(contribution.getIsConfirmed())) {
+                    // Hoàn lại số dư quỹ
+                    fund.setBalance(fund.getBalance().subtract(contribution.getAmount()));
+                    // Xóa payment liên quan (nếu có)
+                    paymentRepository.findByLinkedContributionIdAndIsDeletedFalse(contribution.getId())
+                            .ifPresent(payment -> {
+                                payment.setIsDeleted(true);
+                                paymentRepository.save(payment);
+                            });
+                }
+                // Soft-delete contribution
+                contribution.setIsDeleted(true);
+                contributionRepository.save(contribution);
+            }
+            // Lưu lại số dư quỹ sau khi reverse
+            fundRepository.save(fund);
+        }
 
         expense.setIsDeleted(true);
         expenseRepository.save(expense);

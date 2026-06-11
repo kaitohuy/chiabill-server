@@ -46,7 +46,7 @@ public class SettlementServiceImpl implements SettlementService {
         // 2. Lấy toàn bộ dữ liệu & Tính Net Balance
         List<TripMember> members = tripMemberRepository.findByTripId(tripId);
         List<Expense> expenses = expenseRepository.fetchAllDataForSettlement(tripId);
-        List<Payment> payments = paymentRepository.findByTripIdAndStatus(tripId, PaymentStatus.APPROVED);
+        List<Payment> payments = paymentRepository.findByTripIdAndStatusAndIsDeletedFalse(tripId, PaymentStatus.APPROVED);
         Map<Long, BigDecimal> netBalances = calculateNetBalances(members, expenses, payments);
 
         // Map để lưu trữ thông tin cơ bản
@@ -117,7 +117,7 @@ public class SettlementServiceImpl implements SettlementService {
 
         // 2. Fetch data
         List<Expense> expenses = expenseRepository.fetchAllDataForSettlement(tripId);
-        List<Payment> payments = paymentRepository.findByTripIdAndStatus(tripId, PaymentStatus.APPROVED);
+        List<Payment> payments = paymentRepository.findByTripIdAndStatusAndIsDeletedFalse(tripId, PaymentStatus.APPROVED);
 
         BigDecimal totalSpent = BigDecimal.ZERO;
         BigDecimal totalPaid = BigDecimal.ZERO;
@@ -192,7 +192,7 @@ public class SettlementServiceImpl implements SettlementService {
         // Batch Fetch Data
         List<TripMember> allTripMembers = tripMemberRepository.findByTripIdIn(tripIds);
         List<Expense> allExpenses = expenseRepository.fetchAllDataForSettlementIn(tripIds);
-        List<Payment> allPayments = paymentRepository.findByTripIdInAndStatus(tripIds, PaymentStatus.APPROVED);
+        List<Payment> allPayments = paymentRepository.findByTripIdInAndStatusAndIsDeletedFalse(tripIds, PaymentStatus.APPROVED);
 
         // Group Data By tripId in-memory
         Map<Long, List<TripMember>> membersByTrip = allTripMembers.stream()

@@ -47,4 +47,12 @@ public class Payment extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private PaymentStatus status = PaymentStatus.PENDING;
+
+    /**
+     * Link tới GroupFundContribution tạo ra payment này (nếu đây là payment xác nhận nộp quỹ).
+     * Dùng để khi reverse contribution, có thể soft-delete payment tương ứng.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "linked_contribution_id", nullable = true)
+    private GroupFundContribution linkedContribution;
 }

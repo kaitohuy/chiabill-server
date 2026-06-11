@@ -162,7 +162,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public List<PaymentResponse> getTripPayments(Long tripId) {
-        return paymentRepository.findByTripId(tripId).stream()
+        return paymentRepository.findByTripIdAndIsDeletedFalse(tripId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

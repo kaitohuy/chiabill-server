@@ -12,4 +12,5 @@ public interface GroupFundContributionRepository extends JpaRepository<GroupFund
     List<GroupFundContribution> findByGroupFundIdAndIsDeletedFalseOrderByContributionDateDesc(Long fundId);
     List<GroupFundContribution> findByGroupFundIdAndTypeAndIsDeletedFalse(Long fundId, ContributionType type);
     List<GroupFundContribution> findByGroupFundIdAndIsDeletedFalse(Long fundId);
+    List<GroupFundContribution> findByLinkedExpenseIdAndIsDeletedFalse(Long expenseId);
 }
