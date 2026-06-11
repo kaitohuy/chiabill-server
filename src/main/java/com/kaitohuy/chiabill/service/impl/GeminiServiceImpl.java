@@ -28,6 +28,9 @@ public class GeminiServiceImpl implements GeminiService {
     @Value("${gemini.api-key:}")
     private String apiKey;
 
+    @Value("${gemini.model:gemini-2.5-flash}")
+    private String modelName;
+
     @Override
     public Map<String, Object> scanReceipt(byte[] imageBytes, String mimeType, List<String> availableCategories) {
         if (apiKey == null || apiKey.trim().isEmpty()) {
@@ -77,7 +80,7 @@ public class GeminiServiceImpl implements GeminiService {
             String requestJson = objectMapper.writeValueAsString(requestBody);
 
             // Gửi request tới Gemini API
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + apiKey;
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -110,6 +113,9 @@ public class GeminiServiceImpl implements GeminiService {
         } catch (HttpClientErrorException e) {
             log.error("Gemini HttpClientError: {} - {}", e.getStatusCode(), e.getResponseBodyAsString(), e);
             throw new BusinessException("Lỗi kết nối dịch vụ AI (" + e.getStatusCode() + "). Vui lòng tự nhập tay.");
+        } catch (org.springframework.web.client.HttpServerErrorException e) {
+            log.warn("Gemini HttpServerError: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new BusinessException("Dịch vụ AI của Google đang quá tải hoặc tạm thời gián đoạn (Lỗi " + e.getStatusCode().value() + "). Vui lòng thử lại sau hoặc nhập tay.");
         } catch (Exception e) {
             log.error("Error calling Gemini API: ", e);
             throw new BusinessException("Không thể quét hóa đơn tự động lúc này. Vui lòng tự nhập tay thông tin.");
