@@ -57,7 +57,7 @@ public class EmailServiceImpl implements EmailService {
                     "                    <!-- Header -->\n" +
                     "                    <tr>\n" +
                     "                        <td align=\"center\" style=\"background: linear-gradient(135deg, #FF4B2B, #FF416C); padding: 40px 20px;\">\n" +
-                    "                            <h1 style=\"color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 0.5px;\">ChiaBill</h1>\n" +
+                    "                            <h1 style=\"color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 0.5px;\">DuliVie</h1>\n" +
                     "                            <p style=\"color: rgba(255, 255, 255, 0.9); margin: 8px 0 0 0; font-size: 14px;\">Chia tiền thông minh - Chuyến đi trọn vẹn</p>\n" +
                     "                        </td>\n" +
                     "                    </tr>\n" +
@@ -66,7 +66,7 @@ public class EmailServiceImpl implements EmailService {
                     "                        <td style=\"padding: 40px 30px;\">\n" +
                     "                            <p style=\"margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #4A4A4A;\">Chào bạn,</p>\n" +
                     "                            <p style=\"margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #4A4A4A;\">\n" +
-                    "                                Bạn vừa được mời tham gia chuyến đi <strong style=\"color: #FF4B2B;\">" + tripName + "</strong> trên ứng dụng ChiaBill.\n" +
+                    "                                Bạn vừa được mời tham gia chuyến đi <strong style=\"color: #FF4B2B;\">" + tripName + "</strong> trên ứng dụng DuliVie.\n" +
                     "                            </p>\n" +
                     "                            <p style=\"margin: 0 0 30px 0; font-size: 14px; line-height: 1.6; color: #777777;\">\n" +
                     "                                Vì bạn đã tắt quyền tự động thêm vào nhóm, vui lòng sử dụng một trong các cách dưới đây để tham gia chuyến đi:\n" +
@@ -109,14 +109,14 @@ public class EmailServiceImpl implements EmailService {
                     "\n" +
                     "                            <p style=\"margin: 0; font-size: 15px; line-height: 1.6; color: #4A4A4A;\">\n" +
                     "                                Trân trọng,<br/>\n" +
-                    "                                <strong style=\"color: #FF4B2B;\">Đội ngũ ChiaBill</strong>\n" +
+                    "                                <strong style=\"color: #FF4B2B;\">Đội ngũ DuliVie</strong>\n" +
                     "                            </p>\n" +
                     "                        </td>\n" +
                     "                    </tr>\n" +
                     "                    <!-- Footer -->\n" +
                     "                    <tr>\n" +
                     "                        <td align=\"center\" style=\"background-color: #f9f9f9; padding: 20px; font-size: 12px; color: #999999; border-top: 1px solid #eeeeee;\">\n" +
-                    "                            Email này được gửi tự động từ hệ thống ChiaBill.<br/>\n" +
+                    "                            Email này được gửi tự động từ hệ thống DuliVie.<br/>\n" +
                     "                            Vui lòng không phản hồi trực tiếp email này.\n" +
                     "                        </td>\n" +
                     "                    </tr>\n" +

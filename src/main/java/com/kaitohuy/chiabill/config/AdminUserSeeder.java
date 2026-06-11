@@ -26,7 +26,7 @@ public class AdminUserSeeder {
         log.info("Seeding default Admin user with email: {}", adminEmail);
         User admin = User.builder()
                 .email(adminEmail)
-                .name("Chia Bill Admin")
+                .name("DuliVie Admin")
                 .role("ADMIN")
                 .isAnonymous(false)
                 .isGhost(false)

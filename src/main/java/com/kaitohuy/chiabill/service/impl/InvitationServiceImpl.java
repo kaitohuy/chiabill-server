@@ -108,7 +108,7 @@ public class InvitationServiceImpl implements InvitationService {
 
         return InvitationResponse.builder()
                 .inviteCode(invitation.getId())
-                .inviteLink("chiabill://join/" + invitation.getId())
+                .inviteLink("dulivie://join/" + invitation.getId())
                 .tripId(tripId)
                 .tripName(trip.getName())
                 .memberCount(members.size())
