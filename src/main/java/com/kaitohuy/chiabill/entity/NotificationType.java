@@ -8,5 +8,6 @@ public enum NotificationType {
     MEMBER_KICKED,
     SYSTEM,
     SETTLEMENT_CREATED,
-    ITINERARY
+    ITINERARY,
+    MEMBER_DISABLED
 }

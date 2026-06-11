@@ -48,6 +48,7 @@ public class TripServiceImpl implements TripService {
     private final ExpenseCategoryRepository categoryRepository;
 
     private final com.kaitohuy.chiabill.service.interfaces.CloudinaryService cloudinaryService;
+    private final com.kaitohuy.chiabill.service.interfaces.NotificationService notificationService;
 
     private final TripMapper tripMapper;
     private final UserMapper userMapper;
@@ -383,6 +384,14 @@ public class TripServiceImpl implements TripService {
              if (member.getIsActive()) {
                  throw new BusinessException("Người dùng đã là thành viên của chuyến đi.");
              }
+             // Kiểm tra allowAutoAdd trước khi reactivate
+             if (!Boolean.TRUE.equals(targetUser.getAllowAutoAdd())) {
+                 Trip trip = tripRepository.findById(tripId)
+                         .orElseThrow(() -> new BusinessException("Trip not found"));
+                 String inviteCode = getOrCreateInviteCode(trip, ownerId);
+                 emailService.sendInviteEmail(targetUser.getEmail(), trip.getName(), inviteCode);
+                 throw new BusinessException("Người dùng này không cho phép thêm tự động. Hệ thống đã gửi email lời mời.");
+             }
              // Reactivate
              member.setIsActive(true);
              member.setStatus(com.kaitohuy.chiabill.entity.MemberStatus.ACTIVE);
@@ -615,6 +624,19 @@ public class TripServiceImpl implements TripService {
         
         User actor = userRepository.findById(moderatorId).orElseThrow();
         tripHistoryService.logRemoveMember(actor, member.getTrip(), member.getUser());
+
+        // Gửi thông báo cho thành viên bị tạm ngưng
+        try {
+            notificationService.sendNotification(
+                    member.getUser(),
+                    "Tạm ngưng hoạt động",
+                    "Bạn vừa bị " + actor.getName() + " tạm ngưng hoạt động trong chuyến đi " + member.getTrip().getName() + ", hãy mau chóng làm lành đi nhé!",
+                    com.kaitohuy.chiabill.entity.NotificationType.MEMBER_DISABLED,
+                    tripId
+            );
+        } catch (Exception e) {
+            // Tránh làm hỏng transaction chính
+        }
     }
 
     @Override
@@ -628,6 +650,9 @@ public class TripServiceImpl implements TripService {
         member.setIsActive(true);
         member.setStatus(com.kaitohuy.chiabill.entity.MemberStatus.ACTIVE);
         tripMemberRepository.save(member);
+
+        User actor = userRepository.findById(ownerId).orElseThrow();
+        tripHistoryService.logAddMember(actor, member.getTrip(), member.getUser());
     }
 
     @Override

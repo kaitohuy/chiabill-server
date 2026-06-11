@@ -73,6 +73,16 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
         User actor = userRepository.findById(actorId)
                 .orElseThrow(() -> new BusinessException("Actor not found"));
 
+        // Validate actor in trip and not suspended/disabled
+        TripMember actorMember = tripMemberRepository.findByTripIdAndUserId(trip.getId(), actorId)
+                .orElseThrow(() -> new BusinessException("Bạn không phải thành viên của chuyến đi này"));
+        if (!Boolean.TRUE.equals(actorMember.getIsActive())) {
+            throw new BusinessException("Bạn đã rời khỏi chuyến đi này.");
+        }
+        if (actorMember.getStatus() == com.kaitohuy.chiabill.entity.MemberStatus.DISABLED) {
+            throw new BusinessException("Tài khoản của bạn đang bị tạm ngưng hoạt động trong chuyến đi này.");
+        }
+
         if (Boolean.TRUE.equals(trip.getIsDeleted())) {
             throw new BusinessException("Trip has been deleted");
         }
@@ -395,10 +405,17 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
     }
 
     private void validateOwnerOrPayer(Long tripId, Long callerId, Long payerId) {
-        if (callerId.equals(payerId)) return;
-
         TripMember caller = tripMemberRepository.findByTripIdAndUserId(tripId, callerId)
                 .orElseThrow(() -> new BusinessException("Bạn không phải thành viên của chuyến đi này"));
+        
+        if (!Boolean.TRUE.equals(caller.getIsActive())) {
+            throw new BusinessException("Bạn đã rời khỏi chuyến đi này.");
+        }
+        if (caller.getStatus() == com.kaitohuy.chiabill.entity.MemberStatus.DISABLED) {
+            throw new BusinessException("Tài khoản của bạn đang bị tạm ngưng hoạt động trong chuyến đi này.");
+        }
+
+        if (callerId.equals(payerId)) return;
         
         if (!"OWNER".equals(caller.getRole())) {
             throw new BusinessException("Chỉ chủ nhóm hoặc người tạo chi phí mới được phép thao tác");

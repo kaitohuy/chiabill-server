@@ -203,6 +203,21 @@ public class TripController {
                                 .build();
         }
 
+        @PutMapping("/{tripId}/members/{memberId}/active")
+        public ApiResponse<?> activateMember(
+                        @PathVariable Long tripId,
+                        @PathVariable Long memberId,
+                        Authentication authentication) {
+
+                Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
+                tripService.activateMember(tripId, userId, memberId);
+
+                return ApiResponse.builder()
+                                .success(true)
+                                .message("Đã kích hoạt lại thành viên")
+                                .build();
+        }
+
         @DeleteMapping("/{tripId}/members/{memberId}")
         public ApiResponse<?> kickMember(
                         @PathVariable Long tripId,
