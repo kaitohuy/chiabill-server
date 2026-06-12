@@ -59,10 +59,13 @@ public class PaymentController {
     }
 
     @GetMapping("/trip/{tripId}")
-    public ApiResponse<List<PaymentResponse>> getTripPayments(@PathVariable Long tripId) {
+    public ApiResponse<List<PaymentResponse>> getTripPayments(
+            @PathVariable Long tripId,
+            Authentication authentication) {
+        Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
         return ApiResponse.<List<PaymentResponse>>builder()
                 .success(true)
-                .data(paymentService.getTripPayments(tripId))
+                .data(paymentService.getTripPayments(tripId, userId))
                 .build();
     }
 
@@ -74,11 +77,13 @@ public class PaymentController {
             @RequestParam(required = false) Long toUserId,
             @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime startDate,
             @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime endDate,
-            org.springframework.data.domain.Pageable pageable) {
+            org.springframework.data.domain.Pageable pageable,
+            Authentication authentication) {
 
+        Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
         return ApiResponse.<com.kaitohuy.chiabill.dto.response.PageResponse<PaymentResponse>>builder()
                 .success(true)
-                .data(paymentService.getTripPaymentsPaginated(tripId, status, fromUserId, toUserId, startDate, endDate, pageable))
+                .data(paymentService.getTripPaymentsPaginated(tripId, userId, status, fromUserId, toUserId, startDate, endDate, pageable))
                 .build();
     }
 

@@ -24,5 +24,5 @@ public interface TripHistoryService {
     void logPaymentReject(User actor, Payment payment);
     void logPayOnBehalf(User payer, Payment payment, List<User> onBehalfOfUsers);
 
-    Page<TripHistoryResponse> getTripHistoryPaginated(Long tripId, List<String> actions, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+    Page<TripHistoryResponse> getTripHistoryPaginated(Long tripId, Long userId, List<String> actions, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 }

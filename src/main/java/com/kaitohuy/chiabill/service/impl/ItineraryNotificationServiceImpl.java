@@ -1,6 +1,7 @@
 package com.kaitohuy.chiabill.service.impl;
 
 import com.kaitohuy.chiabill.entity.*;
+import com.kaitohuy.chiabill.exception.BusinessException;
 import com.kaitohuy.chiabill.repository.*;
 import com.kaitohuy.chiabill.service.interfaces.ItineraryNotificationService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,10 @@ public class ItineraryNotificationServiceImpl implements ItineraryNotificationSe
     @Override
     @Transactional(readOnly = true)
     public ItineraryAlarmSetting getSettings(Long tripId, Long userId) {
+        boolean isMember = memberRepository.existsByTripIdAndUserId(tripId, userId);
+        if (!isMember) {
+            throw new BusinessException("Access denied: not a member of this trip");
+        }
         return settingRepository.findByUserIdAndTripId(userId, tripId)
                 .orElseGet(() -> ItineraryAlarmSetting.builder()
                         .user(userRepository.getReferenceById(userId))
@@ -40,6 +45,10 @@ public class ItineraryNotificationServiceImpl implements ItineraryNotificationSe
     @Override
     @Transactional
     public ItineraryAlarmSetting saveSettings(Long tripId, Long userId, Boolean alarmEnabled, Integer alarmValue, String alarmUnit) {
+        boolean isMember = memberRepository.existsByTripIdAndUserId(tripId, userId);
+        if (!isMember) {
+            throw new BusinessException("Access denied: not a member of this trip");
+        }
         ItineraryAlarmSetting setting = settingRepository.findByUserIdAndTripId(userId, tripId)
                 .orElseGet(() -> ItineraryAlarmSetting.builder()
                         .user(userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found")))

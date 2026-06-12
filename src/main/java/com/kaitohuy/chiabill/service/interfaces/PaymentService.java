@@ -17,9 +17,9 @@ public interface PaymentService {
 
     void rejectPayment(Long paymentId, Long verifierId);
 
-    List<PaymentResponse> getTripPayments(Long tripId);
+    List<PaymentResponse> getTripPayments(Long tripId, Long userId);
 
-    PageResponse<PaymentResponse> getTripPaymentsPaginated(Long tripId, PaymentStatus status, Long fromUserId, Long toUserId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, Pageable pageable);
+    PageResponse<PaymentResponse> getTripPaymentsPaginated(Long tripId, Long userId, PaymentStatus status, Long fromUserId, Long toUserId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, Pageable pageable);
 
     void createVirtualPayment(Long tripId, Long fromUserId, Long toUserId, BigDecimal amount, String reason);
 

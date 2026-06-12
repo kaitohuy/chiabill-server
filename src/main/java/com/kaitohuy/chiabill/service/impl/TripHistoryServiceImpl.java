@@ -5,6 +5,8 @@ import com.kaitohuy.chiabill.entity.Expense;
 import com.kaitohuy.chiabill.entity.TripHistory;
 import com.kaitohuy.chiabill.entity.User;
 import com.kaitohuy.chiabill.repository.TripHistoryRepository;
+import com.kaitohuy.chiabill.repository.TripMemberRepository;
+import com.kaitohuy.chiabill.exception.BusinessException;
 import com.kaitohuy.chiabill.service.interfaces.TripHistoryService;
 import com.kaitohuy.chiabill.utils.CurrencyUtil;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 public class TripHistoryServiceImpl implements TripHistoryService {
 
     private final TripHistoryRepository tripHistoryRepository;
+    private final TripMemberRepository tripMemberRepository;
 
     @Override
     public void logEditExpense(User actor, Expense oldExpense, Expense newExpense) {
@@ -194,7 +197,11 @@ public class TripHistoryServiceImpl implements TripHistoryService {
     }
 
     @Override
-    public org.springframework.data.domain.Page<TripHistoryResponse> getTripHistoryPaginated(Long tripId, List<String> actions, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, org.springframework.data.domain.Pageable pageable) {
+    public org.springframework.data.domain.Page<TripHistoryResponse> getTripHistoryPaginated(Long tripId, Long userId, List<String> actions, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, org.springframework.data.domain.Pageable pageable) {
+        boolean isMember = tripMemberRepository.existsByTripIdAndUserId(tripId, userId);
+        if (!isMember) {
+            throw new BusinessException("Access denied: not a member of this trip");
+        }
         return tripHistoryRepository.findFilteredHistories(tripId, actions, startDate, endDate, pageable)
                 .map(this::mapToResponse);
     }

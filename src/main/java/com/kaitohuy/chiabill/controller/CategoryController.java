@@ -21,10 +21,13 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/trip/{tripId}")
-    public ApiResponse<List<ExpenseCategoryResponse>> getCategories(@PathVariable Long tripId) {
+    public ApiResponse<List<ExpenseCategoryResponse>> getCategories(
+            @PathVariable Long tripId,
+            Authentication authentication) {
+        Long userId = ((UserPrincipal) authentication.getPrincipal()).getUserId();
         return ApiResponse.<List<ExpenseCategoryResponse>>builder()
                 .success(true)
-                .data(categoryService.getCategories(tripId))
+                .data(categoryService.getCategories(tripId, userId))
                 .build();
     }
 

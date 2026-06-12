@@ -161,7 +161,11 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public List<PaymentResponse> getTripPayments(Long tripId) {
+    public List<PaymentResponse> getTripPayments(Long tripId, Long userId) {
+        boolean isMember = tripMemberRepository.existsByTripIdAndUserId(tripId, userId);
+        if (!isMember) {
+            throw new BusinessException("Access denied: not a member of this trip");
+        }
         return paymentRepository.findByTripIdAndIsDeletedFalse(tripId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -266,7 +270,11 @@ public class PaymentServiceImpl implements PaymentService {
 
 
     @Override
-    public PageResponse<PaymentResponse> getTripPaymentsPaginated(Long tripId, PaymentStatus status, Long fromUserId, Long toUserId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, Pageable pageable) {
+    public PageResponse<PaymentResponse> getTripPaymentsPaginated(Long tripId, Long userId, PaymentStatus status, Long fromUserId, Long toUserId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, Pageable pageable) {
+        boolean isMember = tripMemberRepository.existsByTripIdAndUserId(tripId, userId);
+        if (!isMember) {
+            throw new BusinessException("Access denied: not a member of this trip");
+        }
         // Query dữ liệu với specification
         Page<Payment> paymentPage = paymentRepository.findAll(
                 PaymentSpecification.filter(tripId, status, fromUserId, toUserId, startDate, endDate),

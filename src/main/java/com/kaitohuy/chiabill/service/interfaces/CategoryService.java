@@ -5,7 +5,7 @@ import com.kaitohuy.chiabill.dto.response.ExpenseCategoryResponse;
 import java.util.List;
 
 public interface CategoryService {
-    List<ExpenseCategoryResponse> getCategories(Long tripId);
+    List<ExpenseCategoryResponse> getCategories(Long tripId, Long userId);
     ExpenseCategoryResponse createCustomCategory(Long tripId, Long userId, String name, String icon);
     void seedDefaultCategories();
 }

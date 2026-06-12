@@ -6,6 +6,7 @@ import com.kaitohuy.chiabill.entity.Trip;
 import com.kaitohuy.chiabill.exception.BusinessException;
 import com.kaitohuy.chiabill.repository.ExpenseCategoryRepository;
 import com.kaitohuy.chiabill.repository.TripRepository;
+import com.kaitohuy.chiabill.repository.TripMemberRepository;
 import com.kaitohuy.chiabill.service.interfaces.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,9 +21,14 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final ExpenseCategoryRepository categoryRepository;
     private final TripRepository tripRepository;
+    private final TripMemberRepository tripMemberRepository;
 
     @Override
-    public List<ExpenseCategoryResponse> getCategories(Long tripId) {
+    public List<ExpenseCategoryResponse> getCategories(Long tripId, Long userId) {
+        boolean isMember = tripMemberRepository.existsByTripIdAndUserId(tripId, userId);
+        if (!isMember) {
+            throw new BusinessException("Access denied: not a member of this trip");
+        }
         return categoryRepository.findAllByTripIdOrSystem(tripId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -31,6 +37,10 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public ExpenseCategoryResponse createCustomCategory(Long tripId, Long userId, String name, String icon) {
+        boolean isMember = tripMemberRepository.existsByTripIdAndUserId(tripId, userId);
+        if (!isMember) {
+            throw new BusinessException("Access denied: not a member of this trip");
+        }
         // 1. Kiểm tra trip & Quyền (Tạm thời cho phép ai cũng tạo được category trong trip mình tham dự)
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new BusinessException("Trip not found"));
