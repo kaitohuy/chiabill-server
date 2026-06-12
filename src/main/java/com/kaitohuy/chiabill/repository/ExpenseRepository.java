@@ -86,6 +86,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
         AND tm.isActive = true
         AND e.isDeleted = false
         AND t.isDeleted = false
+        AND (e.groupFund IS NULL OR e.isFromFund = true)
         AND (:month IS NULL OR MONTH(e.expenseDate) = :month)
         AND (:year IS NULL OR YEAR(e.expenseDate) = :year)
         GROUP BY t.id, t.name, t.categoryIcon
@@ -102,6 +103,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
         JOIN e.category c
         WHERE e.trip.id = :tripId
         AND e.isDeleted = false
+        AND (e.groupFund IS NULL OR e.isFromFund = true)
         GROUP BY c.id, c.name, c.icon
         ORDER BY SUM(e.totalAmount) DESC
     """)

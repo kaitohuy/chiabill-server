@@ -136,10 +136,6 @@ public class GroupFundServiceImpl implements GroupFundService {
             throw new BusinessException("Một số thành viên được chọn không tồn tại.");
         }
 
-        List<User> contributors = allSelected.stream()
-                .filter(user -> !user.getId().equals(fund.getTreasurer().getId()))
-                .collect(Collectors.toList());
-
         // Validate các thành viên phải ở trong Trip
         for (Long cId : request.getContributorIds()) {
             if (!tripMemberRepository.existsByTripIdAndUserId(tripId, cId)) {
@@ -147,34 +143,38 @@ public class GroupFundServiceImpl implements GroupFundService {
             }
         }
 
+        // Kiểm tra xem Thủ quỹ có tham gia đợt này không
+        boolean includesTreasurer = request.getContributorIds().contains(fund.getTreasurer().getId());
+
+        // contributors là những thành viên cần đóng quỹ NHƯNG không bao gồm Thủ quỹ (vì Thủ quỹ tự duyệt luôn)
+        List<User> contributors = allSelected.stream()
+                .filter(user -> !user.getId().equals(fund.getTreasurer().getId()))
+                .collect(Collectors.toList());
+
         ExpenseCategory category = getOrCreateFundCategory(tripId, fund);
 
         String notes = request.getNotes() != null && !request.getNotes().trim().isEmpty() 
                 ? request.getNotes().trim() : "Thu quỹ chung";
 
-        // allParticipants bao gồm các contributors được chọn và Thủ quỹ
-        List<User> allParticipants = new ArrayList<>();
-        allParticipants.add(fund.getTreasurer());
-        for (User u : contributors) {
-            if (!u.getId().equals(fund.getTreasurer().getId())) {
-                allParticipants.add(u);
-            }
-        }
+        // allParticipants là tất cả mọi người tham gia đóng đợt này (để tạo Expense Split)
+        List<User> allParticipants = new ArrayList<>(allSelected);
 
         // Tạo Expense nộp quỹ
         BigDecimal totalAmount = request.getAmount().multiply(new BigDecimal(allParticipants.size()));
         Expense expense = createFundExpense(fund, category, notes, totalAmount);
 
-        // Tạo splits cho tất cả participants (bao gồm cả Thủ quỹ để triệt tiêu công nợ tự động trong quyết toán)
+        // Tạo splits cho tất cả participants
         List<ExpenseSplit> splits = createExpenseSplits(expense, allParticipants, request.getAmount());
         expense.setSplits(splits);
 
-        // Tạo các bản ghi Contribution (có link tới expense để có thể reverse sau này)
-        List<GroupFundContribution> contributions = createFundContributions(fund, contributors, request.getAmount(), notes, expense);
+        // Tạo các bản ghi Contribution
+        List<GroupFundContribution> contributions = createFundContributions(fund, contributors, request.getAmount(), notes, expense, includesTreasurer);
 
-        // Cộng số dư quỹ chung với phần của thủ quỹ
-        fund.setBalance(fund.getBalance().add(request.getAmount()));
-        fundRepository.save(fund);
+        // Nếu có Thủ quỹ tham gia, cộng phần của Thủ quỹ vào số dư ngay lập tức (vì auto-confirm)
+        if (includesTreasurer) {
+            fund.setBalance(fund.getBalance().add(request.getAmount()));
+            fundRepository.save(fund);
+        }
 
         return contributions.stream()
                 .map(fundMapper::toContributionResponse)
@@ -328,7 +328,7 @@ public class GroupFundServiceImpl implements GroupFundService {
         return splitRepository.saveAll(splits);
     }
 
-    private List<GroupFundContribution> createFundContributions(GroupFund fund, List<User> contributors, BigDecimal amount, String notes, Expense linkedExpense) {
+    private List<GroupFundContribution> createFundContributions(GroupFund fund, List<User> contributors, BigDecimal amount, String notes, Expense linkedExpense, boolean includesTreasurer) {
         List<GroupFundContribution> contributions = contributors.stream()
                 .map(user -> GroupFundContribution.builder()
                         .groupFund(fund)
@@ -343,19 +343,21 @@ public class GroupFundServiceImpl implements GroupFundService {
                 )
                 .collect(Collectors.toList());
 
-        // Tự động đóng góp phần của Thủ quỹ (auto confirm vì Thủ quỹ tự quản lý)
-        GroupFundContribution treasurerContribution = GroupFundContribution.builder()
-                .groupFund(fund)
-                .contributor(fund.getTreasurer())
-                .amount(amount)
-                .contributionDate(LocalDateTime.now())
-                .notes(notes + " (Thủ quỹ tự nộp)")
-                .type(ContributionType.REQUIRED)
-                .isConfirmed(true)
-                .linkedExpense(linkedExpense)
-                .build();
-        
-        contributions.add(treasurerContribution);
+        // Chỉ tự động đóng góp phần của Thủ quỹ nếu Thủ quỹ được chọn tham gia
+        if (includesTreasurer) {
+            GroupFundContribution treasurerContribution = GroupFundContribution.builder()
+                    .groupFund(fund)
+                    .contributor(fund.getTreasurer())
+                    .amount(amount)
+                    .contributionDate(LocalDateTime.now())
+                    .notes(notes + " (Thủ quỹ tự nộp)")
+                    .type(ContributionType.REQUIRED)
+                    .isConfirmed(true)
+                    .linkedExpense(linkedExpense)
+                    .build();
+            
+            contributions.add(treasurerContribution);
+        }
         return contributionRepository.saveAll(contributions);
     }
 

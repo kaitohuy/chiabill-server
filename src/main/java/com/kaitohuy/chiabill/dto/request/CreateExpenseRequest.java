@@ -25,8 +25,8 @@ public class CreateExpenseRequest {
     @Positive(message = "Tổng số tiền phải lớn hơn 0")
     private BigDecimal totalAmount;
 
-    @NotBlank(message = "Mô tả không được để trống")
-    @Size(max = 255, message = "Mô tả không được vượt quá 255 ký tự")
+    @NotBlank(message = "Nội dung không được để trống")
+    @Size(max = 255, message = "Nội dung không được vượt quá 255 ký tự")
     private String description;
 
     @NotNull(message = "Danh mục chi phí là bắt buộc")
@@ -54,4 +54,4 @@ public class CreateExpenseRequest {
     @NotEmpty(message = "Danh sách chia tiền không được để trống")
     @Valid
     private List<SplitRequest> splits;
-}
+}
