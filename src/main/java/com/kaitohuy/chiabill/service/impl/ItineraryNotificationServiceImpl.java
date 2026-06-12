@@ -187,11 +187,15 @@ public class ItineraryNotificationServiceImpl implements ItineraryNotificationSe
         String[] parts = timeRange.split("-");
         if (parts.length == 0) return null;
         String startTimeStr = parts[0].trim();
-        String[] timeParts = startTimeStr.split(":");
-        if (timeParts.length < 2) return null;
+        java.util.regex.Pattern timePattern = java.util.regex.Pattern.compile("^(\\d{1,2})[:hH](\\d{1,2})?");
+        java.util.regex.Matcher matcher = timePattern.matcher(startTimeStr);
+        if (!matcher.find()) return null;
         try {
-            int hour = Integer.parseInt(timeParts[0].trim());
-            int minute = Integer.parseInt(timeParts[1].trim());
+            int hour = Integer.parseInt(matcher.group(1));
+            int minute = 0;
+            if (matcher.group(2) != null && !matcher.group(2).isEmpty()) {
+                minute = Integer.parseInt(matcher.group(2));
+            }
             int offsetDays = (dayNumber > 0) ? (dayNumber - 1) : 0;
             
             LocalDateTime activityDateTime = LocalDateTime.of(
