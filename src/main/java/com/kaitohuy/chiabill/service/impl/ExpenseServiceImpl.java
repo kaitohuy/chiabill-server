@@ -343,6 +343,48 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
             }
         }
 
+        // Logic Quỹ chung khi cập nhật Expense
+        boolean oldIsFromFund = Boolean.TRUE.equals(expense.getIsFromFund());
+        boolean newIsFromFund = Boolean.TRUE.equals(request.getIsFromFund());
+        BigDecimal oldAmount = expense.getTotalAmount();
+        BigDecimal newAmount = request.getTotalAmount();
+
+        if (oldIsFromFund && !newIsFromFund) {
+            GroupFund fund = expense.getGroupFund();
+            if (fund == null) {
+                fund = fundRepository.findByTripIdAndIsDeletedFalse(trip.getId())
+                        .orElseThrow(() -> new BusinessException("Quỹ chung không tồn tại"));
+            }
+            fund.setBalance(fund.getBalance().add(oldAmount));
+            fundRepository.save(fund);
+            expense.setIsFromFund(false);
+            expense.setGroupFund(null);
+        } else if (!oldIsFromFund && newIsFromFund) {
+            GroupFund fund = fundRepository.findByTripIdAndIsDeletedFalse(trip.getId())
+                    .orElseThrow(() -> new BusinessException("Quỹ chung chưa được kích hoạt cho chuyến đi này."));
+            if (fund.getBalance().compareTo(newAmount) < 0) {
+                throw new BusinessException("Số dư quỹ chung không đủ để thực hiện thanh toán này (Số dư quỹ hiện tại: " + fund.getBalance() + ").");
+            }
+            fund.setBalance(fund.getBalance().subtract(newAmount));
+            fundRepository.save(fund);
+            expense.setIsFromFund(true);
+            expense.setGroupFund(fund);
+        } else if (oldIsFromFund && newIsFromFund) {
+            GroupFund fund = expense.getGroupFund();
+            if (fund == null) {
+                fund = fundRepository.findByTripIdAndIsDeletedFalse(trip.getId())
+                        .orElseThrow(() -> new BusinessException("Quỹ chung không tồn tại"));
+            }
+            BigDecimal diff = newAmount.subtract(oldAmount);
+            if (diff.compareTo(BigDecimal.ZERO) > 0 && fund.getBalance().compareTo(diff) < 0) {
+                throw new BusinessException("Số dư quỹ chung không đủ để cập nhật thanh toán này (Số dư quỹ hiện tại: " + fund.getBalance() + ", cần thêm: " + diff + ").");
+            }
+            fund.setBalance(fund.getBalance().subtract(diff));
+            fundRepository.save(fund);
+            expense.setIsFromFund(true);
+            expense.setGroupFund(fund);
+        }
+
         expense.setTotalAmount(request.getTotalAmount());
         expense.setDescription(request.getDescription());
         expense.setCategory(newCategory);

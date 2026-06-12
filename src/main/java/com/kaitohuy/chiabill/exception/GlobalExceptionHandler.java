@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
                 .getFieldErrors()
                 .stream()
                 .findFirst()
-                .map(e -> "Dữ liệu không hợp lệ")
+                .map(e -> e.getDefaultMessage())
                 .orElse("Yêu cầu không hợp lệ");
 
         log.warn("Validation Error: {}", message);
