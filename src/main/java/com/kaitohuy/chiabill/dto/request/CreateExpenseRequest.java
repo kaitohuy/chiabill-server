@@ -15,43 +15,43 @@ import java.util.List;
 @Data
 public class CreateExpenseRequest {
 
-    @NotNull(message = "Trip ID is required")
+    @NotNull(message = "ID chuyến đi là bắt buộc")
     private Long tripId;
 
-    @NotNull(message = "Payer ID is required")
+    @NotNull(message = "Người trả tiền là bắt buộc")
     private Long payerId;
 
-    @NotNull(message = "Total amount is required")
-    @Positive(message = "Total amount must be positive")
+    @NotNull(message = "Tổng số tiền là bắt buộc")
+    @Positive(message = "Tổng số tiền phải lớn hơn 0")
     private BigDecimal totalAmount;
 
-    @NotBlank(message = "Description cannot be blank")
-    @Size(max = 255, message = "Description must not exceed 255 characters")
+    @NotBlank(message = "Mô tả không được để trống")
+    @Size(max = 255, message = "Mô tả không được vượt quá 255 ký tự")
     private String description;
 
-    @NotNull(message = "Category ID is required")
+    @NotNull(message = "Danh mục chi phí là bắt buộc")
     private Long categoryId;
 
-    @NotNull(message = "Expense date is required")
+    @NotNull(message = "Ngày chi tiêu là bắt buộc")
     private LocalDateTime expenseDate;
 
-    @Size(max = 500, message = "Receipt URL must not exceed 500 characters")
+    @Size(max = 500, message = "URL hóa đơn không được vượt quá 500 ký tự")
     private String receiptUrl;
 
-    @Size(max = 10, message = "Currency must not exceed 10 characters")
+    @Size(max = 10, message = "Đơn vị tiền tệ không được vượt quá 10 ký tự")
     private String currency;
 
     private BigDecimal exchangeRate;
 
     private Boolean isFromFund;
 
-    @Size(max = 50, message = "Client UUID must not exceed 50 characters")
+    @Size(max = 50, message = "Client UUID không được vượt quá 50 ký tự")
     private String clientUuid;
 
-    @Size(max = 50, message = "Split type must not exceed 50 characters")
+    @Size(max = 50, message = "Loại chia tiền không được vượt quá 50 ký tự")
     private String splitType;
 
-    @NotEmpty(message = "Splits cannot be empty")
+    @NotEmpty(message = "Danh sách chia tiền không được để trống")
     @Valid
     private List<SplitRequest> splits;
 }
