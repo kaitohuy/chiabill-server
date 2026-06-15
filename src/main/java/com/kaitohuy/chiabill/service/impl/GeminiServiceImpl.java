@@ -194,7 +194,7 @@ public class GeminiServiceImpl implements GeminiService {
             
             body.add("file", fileEntity);
             body.add("apikey", ocrApiKey);
-            body.add("language", "vie");
+            body.add("language", "vnm");
             body.add("isOverlayRequired", "false");
             body.add("scale", "true");
             body.add("detectOrientation", "true");
@@ -215,7 +215,7 @@ public class GeminiServiceImpl implements GeminiService {
                 }
 
                 JsonNode parsedResults = rootNode.path("ParsedResults");
-                if (parsedResults.isArray() && parsedResults.size() > 0) {
+                if (parsedResults.isArray() && !parsedResults.isEmpty()) {
                     return parsedResults.get(0).path("ParsedText").asText();
                 }
             }
@@ -239,7 +239,7 @@ public class GeminiServiceImpl implements GeminiService {
             }
 
             // 1. Resize nếu ảnh quá lớn (giới hạn 1600px cạnh dài nhất)
-            BufferedImage processedImage = resizeImage(image, 1600);
+            BufferedImage processedImage = resizeImage(image);
 
             // 2. Nén chất lượng JPEG xuống 60%
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -272,7 +272,8 @@ public class GeminiServiceImpl implements GeminiService {
         }
     }
 
-    private BufferedImage resizeImage(BufferedImage originalImage, int maxBoundary) {
+    private BufferedImage resizeImage(BufferedImage originalImage) {
+        int maxBoundary = 1600;
         int width = originalImage.getWidth();
         int height = originalImage.getHeight();
         
