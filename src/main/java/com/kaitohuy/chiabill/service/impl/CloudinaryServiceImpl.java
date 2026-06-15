@@ -52,16 +52,42 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         }
 
         try {
+            byte[] imageBytes = downloadImageBytes(imageUrl);
             @SuppressWarnings("unchecked")
-            Map<String, Object> uploadResult = cloudinary.uploader().upload(imageUrl,
+            Map<String, Object> uploadResult = cloudinary.uploader().upload(imageBytes,
                     ObjectUtils.asMap(
                             "folder", "chiabill_uploads_places"
                     ));
             return uploadResult.get("secure_url").toString();
         } catch (Exception e) {
-            log.error("Cloudinary Error uploading image from URL {}: ", imageUrl, e);
-            return imageUrl;
+            log.warn("Failed to download/upload image bytes for URL {}, falling back to direct URL upload: {}", imageUrl, e.getMessage());
+            try {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> uploadResult = cloudinary.uploader().upload(imageUrl,
+                        ObjectUtils.asMap(
+                                "folder", "chiabill_uploads_places"
+                        ));
+                return uploadResult.get("secure_url").toString();
+            } catch (Exception ex) {
+                log.error("Cloudinary direct URL upload fallback also failed for URL {}: ", imageUrl, ex);
+                return imageUrl;
+            }
         }
+    }
+
+    private byte[] downloadImageBytes(String imageUrl) throws Exception {
+        java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+                .followRedirects(java.net.http.HttpClient.Redirect.ALWAYS)
+                .build();
+        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                .uri(java.net.URI.create(imageUrl))
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                .build();
+        java.net.http.HttpResponse<byte[]> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofByteArray());
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Failed to download image, status code: " + response.statusCode());
+        }
+        return response.body();
     }
 
     @org.springframework.scheduling.annotation.Async
