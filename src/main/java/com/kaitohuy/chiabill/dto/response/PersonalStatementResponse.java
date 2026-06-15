@@ -15,4 +15,5 @@ public class PersonalStatementResponse {
     private BigDecimal totalSpent;
     private BigDecimal netBalance;
     private List<ExpenseResponse> involvedExpenses;
+    private List<PaymentResponse> involvedPayments;
 }

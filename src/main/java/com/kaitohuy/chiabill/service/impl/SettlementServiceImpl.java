@@ -1,6 +1,7 @@
 package com.kaitohuy.chiabill.service.impl;
 
 import com.kaitohuy.chiabill.dto.response.ExpenseResponse;
+import com.kaitohuy.chiabill.dto.response.PaymentResponse;
 import com.kaitohuy.chiabill.dto.response.PersonalStatementResponse;
 import com.kaitohuy.chiabill.dto.response.SettlementResponse;
 import com.kaitohuy.chiabill.dto.response.SettlementSummaryResponse;
@@ -122,6 +123,7 @@ public class SettlementServiceImpl implements SettlementService {
         BigDecimal totalSpent = BigDecimal.ZERO;
         BigDecimal totalPaid = BigDecimal.ZERO;
         List<ExpenseResponse> involvedExpenses = new ArrayList<>();
+        List<PaymentResponse> involvedPayments = new ArrayList<>();
 
         for (Expense expense : expenses) {
             if (Boolean.TRUE.equals(expense.getIsFromFund())) {
@@ -151,10 +153,28 @@ public class SettlementServiceImpl implements SettlementService {
 
         // 3. Tính cả phần Payment (thanh toán nợ)
         for (Payment payment : payments) {
+            boolean isInvolved = false;
             if (payment.getFromUser().getId().equals(targetUserId)) {
                 totalPaid = totalPaid.add(payment.getAmount());
+                isInvolved = true;
             } else if (payment.getToUser().getId().equals(targetUserId)) {
                 totalSpent = totalSpent.add(payment.getAmount());
+                isInvolved = true;
+            }
+
+            if (isInvolved) {
+                involvedPayments.add(PaymentResponse.builder()
+                        .id(payment.getId())
+                        .tripId(payment.getTrip().getId())
+                        .fromUserId(payment.getFromUser().getId())
+                        .fromUserName(payment.getFromUser().getName())
+                        .toUserId(payment.getToUser().getId())
+                        .toUserName(payment.getToUser().getName())
+                        .amount(payment.getAmount())
+                        .proofUrl(payment.getProofUrl())
+                        .status(payment.getStatus())
+                        .createdAt(payment.getCreatedAt())
+                        .build());
             }
         }
 
@@ -168,6 +188,7 @@ public class SettlementServiceImpl implements SettlementService {
                 .totalSpent(totalSpent.setScale(2, RoundingMode.HALF_UP))
                 .netBalance(netBalance.setScale(2, RoundingMode.HALF_UP))
                 .involvedExpenses(involvedExpenses)
+                .involvedPayments(involvedPayments)
                 .build();
     }
 
