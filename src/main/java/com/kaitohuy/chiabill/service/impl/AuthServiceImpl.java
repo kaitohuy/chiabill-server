@@ -126,7 +126,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse devLogin(String email, String password) {
-        if (devLoginPassword == null || !devLoginPassword.equals(password)) {
+        if (devLoginPassword == null || devLoginPassword.isEmpty() || !devLoginPassword.equals(password)) {
             throw new BusinessException("Mật khẩu nhà phát triển không chính xác");
         }
 
