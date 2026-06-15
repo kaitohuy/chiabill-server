@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.kaitohuy.chiabill.repository.TripRepository;
 import com.kaitohuy.chiabill.entity.Trip;
+import com.kaitohuy.chiabill.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +33,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final UserDeviceTokenRepository tokenRepository;
     private final NotificationMapper notificationMapper;
     private final TripRepository tripRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -59,8 +61,11 @@ public class NotificationServiceImpl implements NotificationService {
     @Async
     @Transactional
     public void sendNotification(User receiver, String title, String body, NotificationType type, Long referenceId) {
+        User receiverUser = userRepository.findById(receiver.getId())
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng"));
+
         Notification notification = Notification.builder()
-                .user(receiver)
+                .user(receiverUser)
                 .title(title)
                 .message(body)
                 .type(type)
@@ -70,9 +75,9 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepository.save(notification);
 
         // 2. Fetch device tokens
-        List<UserDeviceToken> tokens = tokenRepository.findByUserId(receiver.getId());
+        List<UserDeviceToken> tokens = tokenRepository.findByUserId(receiverUser.getId());
         if (tokens.isEmpty()) {
-            log.info("No device tokens found for user: {}", receiver.getEmail());
+            log.info("No device tokens found for user ID: {} ({})", receiverUser.getId(), receiverUser.getName());
             return;
         }
 
@@ -143,7 +148,7 @@ public class NotificationServiceImpl implements NotificationService {
 
                 Message message = messageBuilder.build();
                 FirebaseMessaging.getInstance().send(message);
-                log.info("Notification sent successfully to user {} on device {}", receiver.getEmail(), deviceToken.getPlatform());
+                log.info("Notification sent successfully to user ID: {} ({}) on device {}", receiverUser.getId(), receiverUser.getName(), deviceToken.getPlatform());
             } catch (FirebaseMessagingException e) {
                 log.error("Failed to send notification to device {}: {}", deviceToken.getToken(), e.getMessage());
                 if ("registration-token-not-registered".equals(e.getMessagingErrorCode().name().toLowerCase())) {
