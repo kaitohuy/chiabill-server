@@ -195,6 +195,7 @@ public class GeminiServiceImpl implements GeminiService {
             body.add("file", fileEntity);
             body.add("apikey", ocrApiKey);
             body.add("language", "vnm");
+            body.add("OCREngine", "2");
             body.add("isOverlayRequired", "false");
             body.add("scale", "true");
             body.add("detectOrientation", "true");
