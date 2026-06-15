@@ -54,4 +54,14 @@ public class AuthController {
                 .data(authService.loginGoogle(request.getIdToken(), currentUserId))
                 .build();
     }
+
+    @PostMapping("/dev-login")
+    public ApiResponse<AuthResponse> devLogin(
+            @RequestParam String email,
+            @RequestParam String password) {
+        return ApiResponse.<AuthResponse>builder()
+                .success(true)
+                .data(authService.devLogin(email, password))
+                .build();
+    }
 }

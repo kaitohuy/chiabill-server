@@ -9,4 +9,6 @@ public interface AuthService {
     AuthResponse getCurrentUser(Long userId);
 
     AuthResponse loginGoogle(String idToken, Long currentUserId);
+
+    AuthResponse devLogin(String email, String password);
 }

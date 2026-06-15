@@ -24,6 +24,9 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final GoogleTokenService googleTokenService;
 
+    @org.springframework.beans.factory.annotation.Value("${dev.login.password}")
+    private String devLoginPassword;
+
     @Override
     public AuthResponse loginAnonymous() {
 
@@ -118,6 +121,23 @@ public class AuthServiceImpl implements AuthService {
                 .provider("GOOGLE")
                 .providerId(providerId)
                 .isAnonymous(false)
+                .build();
+    }
+
+    @Override
+    public AuthResponse devLogin(String email, String password) {
+        if (devLoginPassword == null || !devLoginPassword.equals(password)) {
+            throw new BusinessException("Mật khẩu nhà phát triển không chính xác");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("User not found"));
+
+        String token = jwtService.generateToken(user.getId(), user.getRole());
+
+        return AuthResponse.builder()
+                .token(token)
+                .user(userMapper.toResponse(user))
                 .build();
     }
 }
