@@ -18,6 +18,14 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.*;
 
 @Service
@@ -154,19 +162,37 @@ public class GeminiServiceImpl implements GeminiService {
     }
 
     private String callOcrSpace(byte[] imageBytes, String mimeType) {
+        byte[] processedBytes = imageBytes;
+        if (processedBytes.length > 800 * 1024) {
+            log.info("Image size ({} KB) exceeds 800KB, compressing and resizing...", processedBytes.length / 1024);
+            processedBytes = compressAndResizeImage(processedBytes);
+        }
+
+        // Kiểm tra dung lượng file đối với tài khoản Free (giới hạn 1024 KB ~ 1MB)
+        if (processedBytes.length > 1024 * 1024) {
+            log.warn("Image size ({} bytes) exceeds OCR.space Free limit of 1MB after compression", processedBytes.length);
+            throw new BusinessException("Kích thước ảnh quá lớn (" + (processedBytes.length / 1024) + " KB) và không thể nén xuống dưới 1MB. Vui lòng gửi ảnh nhỏ hơn hoặc tự nhập tay.");
+        }
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
             headers.set("apikey", ocrApiKey);
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            ByteArrayResource resource = new ByteArrayResource(imageBytes) {
+            ByteArrayResource resource = new ByteArrayResource(processedBytes) {
                 @Override
                 public String getFilename() {
                     return "receipt.jpg";
                 }
             };
-            body.add("file", resource);
+            
+            // Đặt Content-Type cụ thể cho phần file upload để tránh lỗi nhận diện của OCR.space
+            HttpHeaders partHeaders = new HttpHeaders();
+            partHeaders.setContentType(MediaType.parseMediaType(mimeType != null ? mimeType : "image/jpeg"));
+            HttpEntity<ByteArrayResource> fileEntity = new HttpEntity<>(resource, partHeaders);
+            
+            body.add("file", fileEntity);
             body.add("apikey", ocrApiKey);
             body.add("language", "vie");
             body.add("isOverlayRequired", "false");
@@ -179,10 +205,12 @@ public class GeminiServiceImpl implements GeminiService {
             ResponseEntity<String> response = restTemplate.postForEntity("https://api.ocr.space/parse/image", entity, String.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                log.info("OCR.space response body: {}", response.getBody());
                 JsonNode rootNode = objectMapper.readTree(response.getBody());
                 if (rootNode.path("IsErroredOnProcessing").asBoolean()) {
-                    String errorMsg = rootNode.path("ErrorMessage").asText();
-                    log.error("OCR.space error: {}", errorMsg);
+                    JsonNode errorNode = rootNode.path("ErrorMessage");
+                    String errorMsg = errorNode.isArray() ? errorNode.toString() : errorNode.asText();
+                    log.error("OCR.space API error response: {}", response.getBody());
                     throw new BusinessException("Dịch vụ OCR báo lỗi: " + errorMsg);
                 }
 
@@ -199,6 +227,76 @@ public class GeminiServiceImpl implements GeminiService {
             log.error("Error calling OCR.space API: ", e);
             throw new BusinessException("Lỗi kết nối dịch vụ OCR.space. Vui lòng tự nhập tay.");
         }
+    }
+
+    private byte[] compressAndResizeImage(byte[] originalBytes) {
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(originalBytes);
+            BufferedImage image = ImageIO.read(bais);
+            if (image == null) {
+                log.warn("Could not read image bytes, returning original");
+                return originalBytes;
+            }
+
+            // 1. Resize nếu ảnh quá lớn (giới hạn 1600px cạnh dài nhất)
+            BufferedImage processedImage = resizeImage(image, 1600);
+
+            // 2. Nén chất lượng JPEG xuống 60%
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
+            if (!writers.hasNext()) {
+                log.warn("No JPEG ImageWriter found, returning original bytes");
+                return originalBytes;
+            }
+            ImageWriter writer = writers.next();
+            ImageOutputStream ios = ImageIO.createImageOutputStream(baos);
+            writer.setOutput(ios);
+
+            ImageWriteParam param = writer.getDefaultWriteParam();
+            if (param.canWriteCompressed()) {
+                param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                param.setCompressionType("JPEG");
+                param.setCompressionQuality(0.6f);
+            }
+
+            writer.write(null, new IIOImage(processedImage, null, null), param);
+            writer.dispose();
+            ios.close();
+
+            byte[] compressedBytes = baos.toByteArray();
+            log.info("Image optimized: {} KB -> {} KB", originalBytes.length / 1024, compressedBytes.length / 1024);
+            return compressedBytes;
+        } catch (Exception e) {
+            log.error("Failed to optimize image: ", e);
+            return originalBytes;
+        }
+    }
+
+    private BufferedImage resizeImage(BufferedImage originalImage, int maxBoundary) {
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight();
+        
+        if (width <= maxBoundary && height <= maxBoundary) {
+            return originalImage;
+        }
+        
+        int newWidth;
+        int newHeight;
+        if (width > height) {
+            newWidth = maxBoundary;
+            newHeight = (height * maxBoundary) / width;
+        } else {
+            newHeight = maxBoundary;
+            newWidth = (width * maxBoundary) / height;
+        }
+        
+        BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+        java.awt.Graphics2D g = resizedImage.createGraphics();
+        g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(originalImage, 0, 0, newWidth, newHeight, java.awt.Color.WHITE, null);
+        g.dispose();
+        
+        return resizedImage;
     }
 
     private Map<String, Object> callDeepSeek(String ocrText, List<String> availableCategories) {
