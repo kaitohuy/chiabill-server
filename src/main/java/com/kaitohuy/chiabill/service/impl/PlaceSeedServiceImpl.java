@@ -62,6 +62,11 @@ public class PlaceSeedServiceImpl implements PlaceSeedService {
         for (PlaceRequest req : placesToSeed) {
             executorService.submit(() -> {
                 try {
+                    if (placeRepository.existsByNameAndCityAndIsDeletedFalse(req.getName(), req.getCity())) {
+                        log.debug("Địa điểm [{}] tại [{}] đã tồn tại, bỏ qua.", req.getName(), req.getCity());
+                        return;
+                    }
+
                     Place place = Place.builder()
                             .name(req.getName())
                             .category(req.getCategory())

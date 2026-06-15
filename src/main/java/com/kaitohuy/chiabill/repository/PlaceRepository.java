@@ -15,6 +15,8 @@ public interface PlaceRepository extends JpaRepository<Place, Long>, JpaSpecific
 
     Optional<Place> findByIdAndIsDeletedFalse(Long id);
 
+    boolean existsByNameAndCityAndIsDeletedFalse(String name, String city);
+
     Page<Place> findAllByIsDeletedFalse(Pageable pageable);
 
     Page<Place> findAllByIsDeletedFalseAndCategory(String category, Pageable pageable);

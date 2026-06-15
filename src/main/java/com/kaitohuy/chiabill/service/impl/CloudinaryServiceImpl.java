@@ -60,7 +60,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
                     ));
             return uploadResult.get("secure_url").toString();
         } catch (Exception e) {
-            log.warn("Failed to download/upload image bytes for URL {}, falling back to direct URL upload: {}", imageUrl, e.getMessage());
+            log.warn("Failed to download/upload image bytes for URL {}, falling back to direct URL upload: {}", imageUrl, e.getMessage() != null ? e.getMessage() : e.toString());
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> uploadResult = cloudinary.uploader().upload(imageUrl,
