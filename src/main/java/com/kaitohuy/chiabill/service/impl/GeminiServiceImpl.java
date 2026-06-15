@@ -79,8 +79,9 @@ public class GeminiServiceImpl implements GeminiService {
                     "1. Kiểm tra xem ảnh này có phải là ảnh chụp hóa đơn, biên lai, chứng từ, vé, hóa đơn chuyển khoản, hoặc bảng kê chi tiêu/thanh toán hay không. Trả về giá trị 'isReceipt' là true nếu đúng, hoặc false nếu không phải (ví dụ: ảnh tự sướng, phong cảnh, động vật, đồ vật ngẫu nhiên không liên quan đến chi tiêu).\n" +
                     "2. Tổng số tiền thanh toán (totalAmount) - trả về dạng số thực (double/float). Hãy tìm dòng số tiền thanh toán cuối cùng (Tổng cộng/Total/Thành tiền/Cộng). Nếu hóa đơn dùng đơn vị tiền tệ khác (như USD, EUR, THB...) nhưng số tiền ghi rõ ràng, hãy trích xuất đúng con số thô đó (không cần tự quy đổi sang VND).\n" +
                     "3. Nội dung/Mô tả ngắn gọn (description) - ví dụ: tên cửa hàng/quán ăn + món ăn/mặt hàng chính hoặc tóm tắt nội dung chi tiêu (ví dụ: 'Starbucks Coffee - Cà phê', 'Grab - Di chuyển', 'Circle K - Mua sắm'). Mô tả ngắn gọn, súc tích bằng tiếng Việt.\n" +
-                    "4. Gợi ý tên danh mục (categoryName) - Hãy đối chiếu nội dung hóa đơn và chọn danh mục phù hợp nhất từ danh sách danh mục có sẵn sau đây: [" + categoriesList + "]. Nếu không có danh mục nào thực sự khớp, hãy chọn 'Chi phí phát sinh'.\n\n" +
-                    "Đầu ra PHẢI LÀ một chuỗi JSON hợp lệ với 4 trường: 'isReceipt', 'totalAmount', 'description', 'categoryName'. Không kèm theo bất kỳ văn bản giải thích hay markdown code block nào.";
+                    "4. Gợi ý tên danh mục (categoryName) - Hãy đối chiếu nội dung hóa đơn và chọn danh mục phù hợp nhất từ danh sách danh mục có sẵn sau đây: [" + categoriesList + "]. Nếu không có danh mục nào thực sự khớp, hãy chọn 'Chi phí phát sinh'.\n" +
+                    "5. Ngày chi tiêu (expenseDate) - Hãy tìm ngày giao dịch, ngày in, ngày thanh toán, date,... trên hóa đơn và trả về định dạng chuỗi 'yyyy-MM-dd' (ví dụ: '2026-06-15'). Nếu không tìm thấy, hãy trả về null.\n\n" +
+                    "Đầu ra PHẢI LÀ một chuỗi JSON hợp lệ với 5 trường: 'isReceipt', 'totalAmount', 'description', 'categoryName', 'expenseDate'. Không kèm theo bất kỳ văn bản giải thích hay markdown code block nào.";
 
             // Xây dựng JSON payload thủ công qua Map để đảm bảo cấu trúc chuẩn của Gemini API
             Map<String, Object> partText = new HashMap<>();
@@ -306,11 +307,12 @@ public class GeminiServiceImpl implements GeminiService {
             String categoriesList = String.join(", ", availableCategories);
             String systemPrompt = "Bạn là trợ lý ảo AI chuyên phân tích văn bản OCR thô được trích xuất từ hóa đơn (receipt), biên lai chuyển khoản hoặc bảng kê chi tiêu.\n" +
                     "Hãy phân tích văn bản OCR và trả về thông tin dưới dạng JSON.\n" +
-                    "Cấu trúc JSON đầu ra PHẢI LÀ một đối tượng JSON hợp lệ chứa chính xác 4 trường:\n" +
+                    "Cấu trúc JSON đầu ra PHẢI LÀ một đối tượng JSON hợp lệ chứa chính xác 5 trường:\n" +
                     "1. 'isReceipt' (boolean): true nếu văn bản thể hiện nội dung hóa đơn, biên lai, vé, hóa đơn chuyển tiền/thanh toán, bảng kê chi tiêu; false nếu là nội dung ngẫu nhiên khác.\n" +
                     "2. 'totalAmount' (double): Tổng số tiền thanh toán cuối cùng hoặc số tiền chuyển khoản được ghi trong hóa đơn. Hãy tìm dòng tổng tiền (ví dụ: Tổng cộng, Thành tiền, Total, Amount, Số tiền). Nếu không tìm thấy, trả về 0.0.\n" +
                     "3. 'description' (string): Tóm tắt nội dung chi tiêu bằng tiếng Việt ngắn gọn, súc tích (ví dụ: tên cửa hàng/dịch vụ + mặt hàng chính, tối đa 50 ký tự, ví dụ: 'Starbucks Coffee - Cà phê', 'Grab - Di chuyển').\n" +
-                    "4. 'categoryName' (string): Gợi ý tên danh mục phù hợp nhất từ danh sách danh mục có sẵn sau: [" + categoriesList + "]. Nếu không có danh mục nào phù hợp, trả về 'Chi phí phát sinh'.\n\n" +
+                    "4. 'categoryName' (string): Gợi ý tên danh mục phù hợp nhất từ danh sách danh mục có sẵn sau: [" + categoriesList + "]. Nếu không có danh mục nào phù hợp, trả về 'Chi phí phát sinh'.\n" +
+                    "5. 'expenseDate' (string): Ngày chi tiêu định dạng yyyy-MM-dd (ví dụ: '2026-06-15'). Hãy tìm trong hóa đơn ngày giao dịch, ngày in, ngày thanh toán, date, vv. Nếu không tìm thấy, hãy trả về null.\n\n" +
                     "Đầu ra PHẢI LÀ một chuỗi JSON hợp lệ. Không kèm theo bất kỳ văn bản giải thích hay markdown code block nào.";
 
             Map<String, Object> requestBody = new HashMap<>();

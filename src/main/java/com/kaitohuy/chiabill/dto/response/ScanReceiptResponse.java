@@ -17,4 +17,5 @@ public class ScanReceiptResponse {
     private Long categoryId;
     private String categoryName;
     private String categoryIcon;
+    private String expenseDate;
 }

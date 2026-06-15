@@ -646,12 +646,15 @@ public class ExpenseServiceImpl implements com.kaitohuy.chiabill.service.interfa
                 matchedCategory = categories.get(0);
             }
 
+            String expenseDate = (String) geminiResult.get("expenseDate");
+
             return com.kaitohuy.chiabill.dto.response.ScanReceiptResponse.builder()
                     .totalAmount(totalAmount)
                     .description(description)
                     .categoryId(matchedCategory != null ? matchedCategory.getId() : null)
                     .categoryName(matchedCategory != null ? matchedCategory.getName() : null)
                     .categoryIcon(matchedCategory != null ? matchedCategory.getIcon() : null)
+                    .expenseDate(expenseDate)
                     .build();
 
         } catch (BusinessException e) {
