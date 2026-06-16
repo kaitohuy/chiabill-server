@@ -62,7 +62,7 @@ public class AppAnnouncement extends BaseEntity {
     private Integer latestVersion;
 
     /** TRUE = không cho dùng app nếu chưa update */
-    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Column(nullable = false)
     @Builder.Default
     private Boolean isForceUpdate = false;
 
@@ -89,12 +89,12 @@ public class AppAnnouncement extends BaseEntity {
     private Platform platform = Platform.ALL;
 
     /** Số càng cao càng được hiển thị trước */
-    @Column(columnDefinition = "INT DEFAULT 0")
+    @Column(nullable = false)
     @Builder.Default
     private Integer priority = 0;
 
     /** TRUE = người dùng có thể bấm "Bỏ qua / Đóng" */
-    @Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
+    @Column(nullable = false)
     @Builder.Default
     private Boolean isDismissible = true;
 
@@ -104,7 +104,7 @@ public class AppAnnouncement extends BaseEntity {
     private DisplayMode displayMode = DisplayMode.ONCE;
 
     // ===== THỜI GIAN SỐNG =====
-    @Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
+    @Column(nullable = false)
     @Builder.Default
     private Boolean isActive = true;
 

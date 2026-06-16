@@ -28,7 +28,7 @@ public class AppAnnouncementServiceImpl implements AppAnnouncementService {
     @Transactional(readOnly = true)
     public List<AppAnnouncementResponse> getActiveAnnouncements(AppAnnouncement.Platform platform) {
         List<AppAnnouncement> announcements = announcementRepository
-                .findActiveAnnouncements(platform, LocalDateTime.now());
+                .findActiveAnnouncements(platform, AppAnnouncement.Platform.ALL, LocalDateTime.now());
         return announcements.stream()
                 .map(announcementMapper::toResponse)
                 .toList();
