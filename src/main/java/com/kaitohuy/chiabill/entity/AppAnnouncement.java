@@ -3,6 +3,9 @@ package com.kaitohuy.chiabill.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -75,6 +78,7 @@ public class AppAnnouncement extends BaseEntity {
      * Thông tin ngân hàng dạng JSON
      * VD: {"bank":"VCB","account":"1234567890","name":"NGUYEN VAN A","branch":"HN"}
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private String bankInfo;
 
