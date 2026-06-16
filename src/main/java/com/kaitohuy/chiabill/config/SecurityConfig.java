@@ -28,6 +28,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/announcements/active").permitAll()
                         .requestMatchers("/api/categories/seed").hasRole("ADMIN")
                         .requestMatchers("/api/v1/admin/seed/places", "/api/admin/seed/places", "/admin/seed/places").hasRole("ADMIN")
                         .requestMatchers("/healthz").permitAll()

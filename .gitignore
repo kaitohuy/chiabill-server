@@ -41,3 +41,7 @@ out/
 .env.prod
 chiabill-firebase.json
 places.json
+
+### Local dev notes (không commit) ###
+*_instruction.txt
+*_test_instruction.txt
