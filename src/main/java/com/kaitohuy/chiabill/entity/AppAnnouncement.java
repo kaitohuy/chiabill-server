@@ -75,7 +75,7 @@ public class AppAnnouncement extends BaseEntity {
      * Thông tin ngân hàng dạng JSON
      * VD: {"bank":"VCB","account":"1234567890","name":"NGUYEN VAN A","branch":"HN"}
      */
-    @Column(columnDefinition = "JSON")
+    @Column(columnDefinition = "jsonb")
     private String bankInfo;
 
     /** Số tiền gợi ý (đơn vị: VND) */
