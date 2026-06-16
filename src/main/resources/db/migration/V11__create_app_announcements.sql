@@ -5,13 +5,10 @@
 -- ================================================================
 
 CREATE TABLE IF NOT EXISTS app_announcements (
-    id              BIGINT          NOT NULL AUTO_INCREMENT,
+    id              BIGSERIAL       NOT NULL,
 
     -- Phân loại
     type            VARCHAR(20)     NOT NULL,
-    CONSTRAINT chk_announcement_type CHECK (
-        type IN ('UPDATE', 'ANNOUNCEMENT', 'PAYMENT', 'DONATE', 'PROMOTION', 'MAINTENANCE')
-    ),
 
     -- Nội dung
     title           VARCHAR(255)    NOT NULL,
@@ -20,9 +17,6 @@ CREATE TABLE IF NOT EXISTS app_announcements (
 
     -- Hành động khi click
     action_type     VARCHAR(20)     NOT NULL DEFAULT 'NONE',
-    CONSTRAINT chk_action_type CHECK (
-        action_type IN ('NONE', 'OPEN_URL', 'OPEN_STORE', 'OPEN_SCREEN', 'DISMISS')
-    ),
     action_url      VARCHAR(500),
     action_label    VARCHAR(100),
 
@@ -33,35 +27,43 @@ CREATE TABLE IF NOT EXISTS app_announcements (
 
     -- Chỉ dùng cho type = PAYMENT / DONATE
     qr_image_url    VARCHAR(500),
-    bank_info       JSON,
+    bank_info       JSONB,
     suggested_amount DECIMAL(15, 2),
 
     -- Điều kiện hiển thị
     platform        VARCHAR(10)     NOT NULL DEFAULT 'ALL',
-    CONSTRAINT chk_platform CHECK (
-        platform IN ('ALL', 'ANDROID', 'IOS')
-    ),
     priority        INT             NOT NULL DEFAULT 0,
     is_dismissible  BOOLEAN         NOT NULL DEFAULT TRUE,
     display_mode    VARCHAR(15)     NOT NULL DEFAULT 'ONCE',
-    CONSTRAINT chk_display_mode CHECK (
-        display_mode IN ('ONCE', 'EVERY_LAUNCH', 'DAILY', 'ALWAYS')
-    ),
 
     -- Thời gian sống
     is_active       BOOLEAN         NOT NULL DEFAULT TRUE,
-    start_at        DATETIME,
-    end_at          DATETIME,
+    start_at        TIMESTAMP,
+    end_at          TIMESTAMP,
 
     -- Audit (ai tạo)
     created_by      BIGINT,
 
     -- BaseEntity fields
     created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_deleted      BOOLEAN         NOT NULL DEFAULT FALSE,
 
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+
+    -- CHECK constraints (đặt ở cuối cho PostgreSQL)
+    CONSTRAINT chk_announcement_type CHECK (
+        type IN ('UPDATE', 'ANNOUNCEMENT', 'PAYMENT', 'DONATE', 'PROMOTION', 'MAINTENANCE')
+    ),
+    CONSTRAINT chk_action_type CHECK (
+        action_type IN ('NONE', 'OPEN_URL', 'OPEN_STORE', 'OPEN_SCREEN', 'DISMISS')
+    ),
+    CONSTRAINT chk_platform CHECK (
+        platform IN ('ALL', 'ANDROID', 'IOS')
+    ),
+    CONSTRAINT chk_display_mode CHECK (
+        display_mode IN ('ONCE', 'EVERY_LAUNCH', 'DAILY', 'ALWAYS')
+    )
 );
 
 -- Indexes để query nhanh khi client gọi GET /active
@@ -73,7 +75,7 @@ CREATE INDEX idx_announcement_priority ON app_announcements (priority DESC);
 
 -- ================================================================
 -- Seed data mẫu: 1 thông báo chào mừng hiện 1 lần khi vào app
--- (Xóa dòng này nếu không cần data mẫu)
+-- (Xóa block INSERT này nếu không cần data mẫu)
 -- ================================================================
 INSERT INTO app_announcements (
     type, title, content,
