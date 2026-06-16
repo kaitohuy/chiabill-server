@@ -151,9 +151,11 @@ public class NotificationServiceImpl implements NotificationService {
                 log.info("Notification sent successfully to user ID: {} ({}) on device {}", receiverUser.getId(), receiverUser.getName(), deviceToken.getPlatform());
             } catch (FirebaseMessagingException e) {
                 log.error("Failed to send notification to device {}: {}", deviceToken.getToken(), e.getMessage());
-                if ("registration-token-not-registered".equals(e.getMessagingErrorCode().name().toLowerCase())) {
-                   tokenRepository.delete(deviceToken);
-                   log.info("Deleted invalid token: {}", deviceToken.getToken());
+                // UNREGISTERED = token không còn hợp lệ (app gỡ cài, token hết hạn...)
+                // → Xoá khỏi DB luôn để tránh gửi lại lần sau
+                if (e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED) {
+                    tokenRepository.delete(deviceToken);
+                    log.info("Deleted invalid/expired FCM token for user ID: {}", receiverUser.getId());
                 }
             }
         }
