@@ -36,8 +36,14 @@ public class AppAnnouncement extends BaseEntity {
     @Column(nullable = false, length = 255)
     private String title;
 
+    @Column(length = 255)
+    private String titleEn;
+
     @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Column(columnDefinition = "TEXT")
+    private String contentEn;
 
     /** Banner image hoặc ảnh minh họa chính */
     @Column(length = 500)

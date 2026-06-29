@@ -48,7 +48,9 @@ public class AppAnnouncementServiceImpl implements AppAnnouncementService {
         AppAnnouncement announcement = AppAnnouncement.builder()
                 .type(request.getType())
                 .title(request.getTitle())
+                .titleEn(request.getTitleEn())
                 .content(request.getContent())
+                .contentEn(request.getContentEn())
                 .imageUrl(request.getImageUrl())
                 .actionType(request.getActionType() != null ? request.getActionType() : AppAnnouncement.ActionType.NONE)
                 .actionUrl(request.getActionUrl())
@@ -83,7 +85,9 @@ public class AppAnnouncementServiceImpl implements AppAnnouncementService {
 
         if (request.getType() != null) announcement.setType(request.getType());
         if (request.getTitle() != null) announcement.setTitle(request.getTitle());
+        if (request.getTitleEn() != null) announcement.setTitleEn(request.getTitleEn());
         if (request.getContent() != null) announcement.setContent(request.getContent());
+        if (request.getContentEn() != null) announcement.setContentEn(request.getContentEn());
         if (request.getImageUrl() != null) announcement.setImageUrl(request.getImageUrl());
         if (request.getActionType() != null) announcement.setActionType(request.getActionType());
         if (request.getActionUrl() != null) announcement.setActionUrl(request.getActionUrl());

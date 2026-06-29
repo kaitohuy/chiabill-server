@@ -21,7 +21,11 @@ public class AppAnnouncementRequest {
     @Size(max = 255, message = "Tiêu đề tối đa 255 ký tự")
     private String title;
 
+    @Size(max = 255, message = "Tiêu đề tiếng Anh tối đa 255 ký tự")
+    private String titleEn;
+
     private String content;
+    private String contentEn;
     private String imageUrl;
 
     private AppAnnouncement.ActionType actionType;

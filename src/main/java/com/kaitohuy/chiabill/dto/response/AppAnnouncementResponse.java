@@ -16,7 +16,9 @@ public class AppAnnouncementResponse {
 
     // Nội dung
     private String title;
+    private String titleEn;
     private String content;
+    private String contentEn;
     private String imageUrl;
 
     // Hành động
