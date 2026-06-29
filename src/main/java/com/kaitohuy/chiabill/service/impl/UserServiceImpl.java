@@ -4,6 +4,7 @@ import com.kaitohuy.chiabill.dto.request.UpdateProfileRequest;
 import com.kaitohuy.chiabill.dto.response.UserResponse;
 import com.kaitohuy.chiabill.entity.User;
 import com.kaitohuy.chiabill.exception.BusinessException;
+import com.kaitohuy.chiabill.exception.ErrorCode;
 import com.kaitohuy.chiabill.mapper.UserMapper;
 import com.kaitohuy.chiabill.repository.UserRepository;
 import com.kaitohuy.chiabill.service.interfaces.UserService;
@@ -26,7 +27,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getMyProfile(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("User not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         return userMapper.toResponse(user);
     }
 
@@ -35,7 +36,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("User not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (request.getName() != null) {
             user.setName(request.getName());
@@ -63,7 +64,7 @@ public class UserServiceImpl implements UserService {
         if (request.getAllowAutoAdd() != null) {
             // Nếu muốn tắt tự động add (false), phải đảm bảo user có email để nhận thư mời
             if (!request.getAllowAutoAdd() && (user.getEmail() == null || user.getEmail().isBlank())) {
-                throw new BusinessException("Bạn phải cập nhật Email trước khi tắt quyền tự động thêm vào nhóm mẫu.");
+                throw new BusinessException(ErrorCode.EMAIL_NOT_UPDATED);
             }
             user.setAllowAutoAdd(request.getAllowAutoAdd());
         }
@@ -96,6 +97,13 @@ public class UserServiceImpl implements UserService {
             }
         }
 
+        if (request.getLanguage() != null) {
+            String lang = request.getLanguage().trim().toLowerCase();
+            if ("vi".equals(lang) || "en".equals(lang)) {
+                user.setLanguage(lang);
+            }
+        }
+
         return userMapper.toResponse(userRepository.save(user));
     }
 
@@ -103,7 +111,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String uploadAvatar(Long userId, MultipartFile file) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("User not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (user.getAvatarUrl() != null) {
             cloudinaryService.deleteImage(user.getAvatarUrl());
@@ -120,7 +128,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String uploadBankQr(Long userId, MultipartFile file) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("User not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (user.getBankQrUrl() != null) {
             cloudinaryService.deleteImage(user.getBankQrUrl());
@@ -137,7 +145,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteMyAccount(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("User not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         performSoftDelete(user);
     }
 
@@ -145,12 +153,12 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteAccountByEmailOrPhone(String email, String phone) {
         if ((email == null || email.isBlank()) && (phone == null || phone.isBlank())) {
-            throw new BusinessException("Email hoặc số điện thoại không được để trống");
+            throw new BusinessException(ErrorCode.EMAIL_OR_PHONE_REQUIRED);
         }
         User user = userRepository.findByEmailOrPhone(
                 (email != null && !email.isBlank()) ? email.trim() : null,
                 (phone != null && !phone.isBlank()) ? phone.trim() : null
-        ).orElseThrow(() -> new BusinessException("Không tìm thấy tài khoản với thông tin đã cung cấp."));
+        ).orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
         
         performSoftDelete(user);
     }
@@ -211,7 +219,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void adminDeleteUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("User not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         performSoftDelete(user);
     }
 }

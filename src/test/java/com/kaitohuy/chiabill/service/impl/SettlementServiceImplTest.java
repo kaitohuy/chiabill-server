@@ -198,20 +198,27 @@ class SettlementServiceImplTest {
         TripMember m1_t1 = createMember(hong); m1_t1.setTrip(t1);
         TripMember m1_t2 = createMember(hong); m1_t2.setTrip(t2);
         
+        TripMember m2_t1 = createMember(hien); m2_t1.setTrip(t1);
+        TripMember m3_t2 = createMember(huy); m3_t2.setTrip(t2);
+        
         when(tripMemberRepository.findByUserIdAndIsActiveTrue(hong.getId()))
                 .thenReturn(Arrays.asList(m1_t1, m1_t2));
         
-        // Mock Trip 1
-        when(tripMemberRepository.findByTripId(1L)).thenReturn(Arrays.asList(createMember(hong), createMember(hien)));
+        // Mock Trip 1 & 2 batch trip members
+        when(tripMemberRepository.findByTripIdIn(Arrays.asList(1L, 2L)))
+                .thenReturn(Arrays.asList(m1_t1, m2_t1, m1_t2, m3_t2));
+        
+        // Mock Trip 1 & 2 batch expenses
         Expense exp1 = createExpense(hien, Collections.singletonList(createSplit(hong, 100)));
-        when(expenseRepository.fetchAllDataForSettlement(1L)).thenReturn(Collections.singletonList(exp1));
-        when(paymentRepository.findByTripIdAndStatus(1L, PaymentStatus.APPROVED)).thenReturn(Collections.emptyList());
-
-        // Mock Trip 2
-        when(tripMemberRepository.findByTripId(2L)).thenReturn(Arrays.asList(createMember(hong), createMember(huy)));
+        exp1.setTrip(t1);
         Expense exp2 = createExpense(hong, Collections.singletonList(createSplit(huy, 150)));
-        when(expenseRepository.fetchAllDataForSettlement(2L)).thenReturn(Collections.singletonList(exp2));
-        when(paymentRepository.findByTripIdAndStatus(2L, PaymentStatus.APPROVED)).thenReturn(Collections.emptyList());
+        exp2.setTrip(t2);
+        when(expenseRepository.fetchAllDataForSettlementIn(Arrays.asList(1L, 2L)))
+                .thenReturn(Arrays.asList(exp1, exp2));
+        
+        // Mock Trip 1 & 2 batch payments
+        when(paymentRepository.findByTripIdInAndStatusAndIsDeletedFalse(Arrays.asList(1L, 2L), PaymentStatus.APPROVED))
+                .thenReturn(Collections.emptyList());
 
         SettlementSummaryResponse summary = settlementService.getSettlementSummary(hong.getId());
 
@@ -226,7 +233,7 @@ class SettlementServiceImplTest {
                 createMember(hong), createMember(hien), createMember(huy), createMember(hoang)
         ));
         when(expenseRepository.fetchAllDataForSettlement(anyLong())).thenReturn(expenses);
-        when(paymentRepository.findByTripIdAndStatus(anyLong(), any())).thenReturn(payments);
+        when(paymentRepository.findByTripIdAndStatusAndIsDeletedFalse(anyLong(), any())).thenReturn(payments);
     }
 
     private void assertDebt(List<SettlementResponse> results, Long from, Long to, double amount) {

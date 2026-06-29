@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yêu cầu xóa tài khoản - DuliVie</title>
+    <title id="pageTitle">Account Deletion Request - DuliVie</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -43,6 +43,35 @@
         .header {
             text-align: center;
             margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .lang-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: inline-flex;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .lang-btn {
+            padding: 5px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            border-radius: 20px;
+        }
+
+        .lang-btn.active {
+            background: var(--primary);
+            color: #fff;
         }
 
         .logo {
@@ -170,50 +199,119 @@
             font-size: 0.85rem;
             color: var(--text-muted);
         }
+
+        [data-lang] { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <div class="lang-toggle">
+                <button class="lang-btn" id="btn-vi" onclick="setLang('vi')">VI</button>
+                <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+            </div>
             <div class="logo">DuliVie</div>
-            <h1>Yêu cầu xóa tài khoản</h1>
-            <p class="desc">Vui lòng nhập thông tin tài khoản cần xóa. Chúng tôi sẽ xử lý yêu cầu của bạn trong vòng 24-48 giờ làm việc.</p>
+            <h1>
+                <span data-lang="vi">Yêu cầu xóa tài khoản</span>
+                <span data-lang="en">Account Deletion Request</span>
+            </h1>
+            <p class="desc">
+                <span data-lang="vi">Vui lòng nhập thông tin tài khoản cần xóa. Chúng tôi sẽ xử lý yêu cầu của bạn trong vòng 24-48 giờ làm việc.</span>
+                <span data-lang="en">Please enter the account information to be deleted. We will process your request within 24-48 business hours.</span>
+            </p>
         </div>
 
         <div id="msgContainer" class="message"></div>
 
         <form id="deleteForm" onsubmit="submitForm(event)">
             <div class="form-group">
-                <label for="email">Địa chỉ Email đăng nhập</label>
-                <input type="email" id="email" required placeholder="nhap-email@gmail.com">
+                <label for="email">
+                    <span data-lang="vi">Địa chỉ Email đăng nhập</span>
+                    <span data-lang="en">Login Email Address</span>
+                </label>
+                <input type="email" id="email" required placeholder="your-email@gmail.com">
             </div>
 
             <div class="form-group">
-                <label for="phone">Số điện thoại liên kết (nếu có)</label>
-                <input type="text" id="phone" placeholder="Ví dụ: 0987654321">
+                <label for="phone">
+                    <span data-lang="vi">Số điện thoại liên kết (nếu có)</span>
+                    <span data-lang="en">Linked phone number (optional)</span>
+                </label>
+                <input type="text" id="phone">
             </div>
 
             <div class="form-group">
-                <label for="reason">Lý do yêu cầu xóa tài khoản (tùy chọn)</label>
-                <textarea id="reason" rows="3" placeholder="Chia sẻ với chúng tôi lý do bạn muốn rời đi..."></textarea>
+                <label for="reason">
+                    <span data-lang="vi">Lý do yêu cầu xóa tài khoản (tùy chọn)</span>
+                    <span data-lang="en">Reason for account deletion (optional)</span>
+                </label>
+                <textarea id="reason" rows="3">
+                </textarea>
             </div>
 
             <div class="checkbox-group">
                 <input type="checkbox" id="confirm" required>
-                <label for="confirm">Tôi hiểu và đồng ý rằng toàn bộ lịch sử hóa đơn, chuyến đi và dữ liệu cá nhân của tôi sẽ bị xóa hoặc vô danh hóa vĩnh viễn và không thể khôi phục lại.</label>
+                <label for="confirm">
+                    <span data-lang="vi">Tôi hiểu và đồng ý rằng toàn bộ lịch sử hóa đơn, chuyến đi và dữ liệu cá nhân của tôi sẽ bị xóa hoặc vô danh hóa vĩnh viễn và không thể khôi phục lại.</span>
+                    <span data-lang="en">I understand and agree that all my bill history, trips, and personal data will be permanently deleted or anonymized and cannot be recovered.</span>
+                </label>
             </div>
 
-            <button type="submit" id="submitBtn" class="btn">GỬI YÊU CẦU XÓA TÀI KHOẢN</button>
+            <button type="submit" id="submitBtn" class="btn">
+                <span data-lang="vi">GỬI YÊU CẦU XÓA TÀI KHOẢN</span>
+                <span data-lang="en">SUBMIT ACCOUNT DELETION REQUEST</span>
+            </button>
         </form>
 
         <div class="footer">
-            Quay lại <a href="/privacy-policy" style="color: var(--primary-dark); text-decoration: none; font-weight: 600;">Chính sách bảo mật</a>
+            <span data-lang="vi">Quay lại <a href="/privacy-policy" style="color: var(--primary-dark); text-decoration: none; font-weight: 600;">Chính sách bảo mật</a></span>
+            <span data-lang="en">Back to <a href="/privacy-policy" style="color: var(--primary-dark); text-decoration: none; font-weight: 600;">Privacy Policy</a></span>
         </div>
     </div>
 
     <script>
+        const i18n = {
+            vi: {
+                title: 'Yêu cầu xóa tài khoản - DuliVie',
+                processing: 'ĐANG XỬ LÝ...',
+                submitBtn: 'GỬI YÊU CẦU XÓA TÀI KHOẢN',
+                successMsg: 'Yêu cầu xóa tài khoản đã được gửi thành công! Dữ liệu của bạn đang được tiến hành xử lý xóa.',
+                errorGeneral: 'Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng kiểm tra lại thông tin.',
+                errorNetwork: 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.',
+                phonePlaceholder: 'Ví dụ: 0987654321',
+                reasonPlaceholder: 'Chia sẻ với chúng tôi lý do bạn muốn rời đi...',
+            },
+            en: {
+                title: 'Account Deletion Request - DuliVie',
+                processing: 'PROCESSING...',
+                submitBtn: 'SUBMIT ACCOUNT DELETION REQUEST',
+                successMsg: 'Your account deletion request has been submitted! Your data is being processed for deletion.',
+                errorGeneral: 'An error occurred while submitting the request. Please check the information and try again.',
+                errorNetwork: 'Unable to connect to the server. Please try again later.',
+                phonePlaceholder: 'e.g. +1 555 123 4567',
+                reasonPlaceholder: 'Tell us why you\'re leaving...',
+            }
+        };
+
+        let currentLang = 'en';
+
+        function setLang(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                el.style.display = (el.getAttribute('data-lang') === lang) ? '' : 'none';
+            });
+            document.getElementById('btn-vi').classList.toggle('active', lang === 'vi');
+            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+            document.documentElement.lang = lang;
+            document.getElementById('pageTitle').textContent = i18n[lang].title;
+            document.getElementById('phone').placeholder = i18n[lang].phonePlaceholder;
+            document.getElementById('reason').placeholder = i18n[lang].reasonPlaceholder;
+            localStorage.setItem('dv_lang', lang);
+        }
+
         function submitForm(event) {
             event.preventDefault();
+            const t = i18n[currentLang];
             const submitBtn = document.getElementById('submitBtn');
             const msgContainer = document.getElementById('msgContainer');
             
@@ -222,40 +320,38 @@
             const reason = document.getElementById('reason').value;
             
             submitBtn.disabled = true;
-            submitBtn.innerText = 'ĐANG XỬ LÝ...';
+            submitBtn.innerText = t.processing;
             
-            // Gọi API post lên Server
             fetch('/delete-account-request', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    email: email,
-                    phone: phone,
-                    reason: reason
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, phone, reason })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     msgContainer.className = 'message success';
-                    msgContainer.innerText = 'Yêu cầu xóa tài khoản đã được gửi thành công! Dữ liệu của bạn đang được tiến hành xử lý xóa.';
+                    msgContainer.innerText = t.successMsg;
                     document.getElementById('deleteForm').reset();
                 } else {
                     msgContainer.className = 'message error';
-                    msgContainer.innerText = data.message || 'Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng kiểm tra lại thông tin.';
+                    msgContainer.innerText = data.message || t.errorGeneral;
                     submitBtn.disabled = false;
-                    submitBtn.innerText = 'GỬI YÊU CẦU XÓA TÀI KHOẢN';
+                    submitBtn.innerText = t.submitBtn;
                 }
             })
-            .catch(error => {
+            .catch(() => {
                 msgContainer.className = 'message error';
-                msgContainer.innerText = 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.';
+                msgContainer.innerText = t.errorNetwork;
                 submitBtn.disabled = false;
-                submitBtn.innerText = 'GỬI YÊU CẦU XÓA TÀI KHOẢN';
+                submitBtn.innerText = t.submitBtn;
             });
         }
+
+        // Auto-detect language
+        const saved = localStorage.getItem('dv_lang');
+        const browserLang = navigator.language?.startsWith('vi') ? 'vi' : 'en';
+        setLang(saved || browserLang);
     </script>
 </body>
 </html>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chính sách bảo mật - DuliVie</title>
+    <title id="pageTitle">Privacy Policy - DuliVie</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -39,6 +39,35 @@
             margin-bottom: 3rem;
             border-bottom: 2px solid var(--border);
             padding-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .lang-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: inline-flex;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .lang-btn {
+            padding: 5px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            border-radius: 20px;
+        }
+
+        .lang-btn.active {
+            background: var(--primary);
+            color: #fff;
         }
 
         .logo {
@@ -95,64 +124,188 @@
             border-top: 1px solid var(--border);
             padding-top: 1.5rem;
         }
+
+        [data-lang] { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <div class="lang-toggle">
+                <button class="lang-btn" id="btn-vi" onclick="setLang('vi')">VI</button>
+                <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+            </div>
             <div class="logo">DuliVie</div>
-            <h1>Chính sách bảo mật</h1>
-            <div class="date">Cập nhật lần cuối: Ngày 04 tháng 06 năm 2026</div>
+            <h1>
+                <span data-lang="vi">Chính sách bảo mật</span>
+                <span data-lang="en">Privacy Policy</span>
+            </h1>
+            <div class="date">
+                <span data-lang="vi">Cập nhật lần cuối: Ngày 04 tháng 06 năm 2026</span>
+                <span data-lang="en">Last updated: June 04, 2026</span>
+            </div>
         </div>
 
-        <p>Chào mừng bạn đến với <strong>DuliVie</strong>. Quyền riêng tư của bạn là ưu tiên hàng đầu của chúng tôi. Chính sách bảo mật này giải thích cách chúng tôi thu thập, sử dụng, tiết lộ và bảo vệ thông tin của bạn khi bạn sử dụng ứng dụng di động DuliVie.</p>
+        <p>
+            <span data-lang="vi">Chào mừng bạn đến với <strong>DuliVie</strong>. Quyền riêng tư của bạn là ưu tiên hàng đầu của chúng tôi. Chính sách bảo mật này giải thích cách chúng tôi thu thập, sử dụng, tiết lộ và bảo vệ thông tin của bạn khi bạn sử dụng ứng dụng di động DuliVie.</span>
+            <span data-lang="en">Welcome to <strong>DuliVie</strong>. Your privacy is our top priority. This Privacy Policy explains how we collect, use, disclose, and protect your information when you use the DuliVie mobile application.</span>
+        </p>
 
-        <h2>1. Thông tin chúng tôi thu thập</h2>
-        <p>Khi bạn sử dụng ứng dụng DuliVie, chúng tôi thu thập một số thông tin cá nhân cơ bản để phục vụ cho các tính năng của ứng dụng:</p>
+        <h2>
+            <span data-lang="vi">1. Thông tin chúng tôi thu thập</span>
+            <span data-lang="en">1. Information We Collect</span>
+        </h2>
+        <p>
+            <span data-lang="vi">Khi bạn sử dụng ứng dụng DuliVie, chúng tôi thu thập một số thông tin cá nhân cơ bản để phục vụ cho các tính năng của ứng dụng:</span>
+            <span data-lang="en">When you use the DuliVie app, we collect certain basic personal information to support application features:</span>
+        </p>
         <ul>
-            <li><strong>Thông tin tài khoản:</strong> Tên hiển thị, địa chỉ email, và số điện thoại được bạn tự nguyện cung cấp khi thiết lập hồ sơ hoặc liên kết qua tài khoản Google.</li>
-            <li><strong>Thông tin thanh toán tĩnh:</strong> Thông tin số tài khoản ngân hàng và mã QR thanh toán do bạn tải lên để phục vụ chức năng tạo mã VietQR nhanh nhằm chia tiền hóa đơn nhóm.</li>
-            <li><strong>Dữ liệu ứng dụng tạo ra:</strong> Các thông tin về chuyến đi, các khoản chi phí, giao dịch thanh toán trong nhóm do bạn tạo ra hoặc đóng góp.</li>
-            <li><strong>Ảnh chụp hóa đơn và chứng từ (khi dùng tính năng Quét AI):</strong> Tệp hình ảnh hóa đơn do bạn chụp từ camera hoặc chọn từ album ảnh để phục vụ việc tự động trích xuất thông tin.</li>
-            <li><strong>Đăng nhập ẩn danh:</strong> Nếu sử dụng đăng nhập ẩn danh, chúng tôi chỉ lưu một mã định danh tạm thời để liên kết dữ liệu thiết bị của bạn.</li>
+            <li>
+                <span data-lang="vi"><strong>Thông tin tài khoản:</strong> Tên hiển thị, địa chỉ email, và số điện thoại được bạn tự nguyện cung cấp khi thiết lập hồ sơ hoặc liên kết qua tài khoản Google.</span>
+                <span data-lang="en"><strong>Account information:</strong> Display name, email address, and phone number you voluntarily provide when setting up your profile or linking via Google account.</span>
+            </li>
+            <li>
+                <span data-lang="vi"><strong>Thông tin thanh toán tĩnh:</strong> Thông tin số tài khoản ngân hàng và mã QR thanh toán do bạn tải lên để phục vụ chức năng tạo mã VietQR nhanh nhằm chia tiền hóa đơn nhóm.</span>
+                <span data-lang="en"><strong>Static payment information:</strong> Bank account number and payment QR code uploaded by you to support the quick VietQR code generation feature for group bill splitting.</span>
+            </li>
+            <li>
+                <span data-lang="vi"><strong>Dữ liệu ứng dụng tạo ra:</strong> Các thông tin về chuyến đi, các khoản chi phí, giao dịch thanh toán trong nhóm do bạn tạo ra hoặc đóng góp.</span>
+                <span data-lang="en"><strong>App-generated data:</strong> Trip information, expenses, and group payment transactions created or contributed by you.</span>
+            </li>
+            <li>
+                <span data-lang="vi"><strong>Ảnh chụp hóa đơn và chứng từ (khi dùng tính năng Quét AI):</strong> Tệp hình ảnh hóa đơn do bạn chụp từ camera hoặc chọn từ album ảnh để phục vụ việc tự động trích xuất thông tin.</span>
+                <span data-lang="en"><strong>Receipt and proof images (AI Scan feature):</strong> Receipt image files you capture from camera or select from your photo album for automatic information extraction.</span>
+            </li>
+            <li>
+                <span data-lang="vi"><strong>Đăng nhập ẩn danh:</strong> Nếu sử dụng đăng nhập ẩn danh, chúng tôi chỉ lưu một mã định danh tạm thời để liên kết dữ liệu thiết bị của bạn.</span>
+                <span data-lang="en"><strong>Anonymous login:</strong> If you use anonymous login, we only store a temporary identifier to link your device data.</span>
+            </li>
         </ul>
 
-        <h2>2. Cách chúng tôi sử dụng thông tin</h2>
-        <p>Chúng tôi chỉ sử dụng thông tin thu thập được cho các mục đích sau:</p>
+        <h2>
+            <span data-lang="vi">2. Cách chúng tôi sử dụng thông tin</span>
+            <span data-lang="en">2. How We Use Your Information</span>
+        </h2>
+        <p>
+            <span data-lang="vi">Chúng tôi chỉ sử dụng thông tin thu thập được cho các mục đích sau:</span>
+            <span data-lang="en">We only use the collected information for the following purposes:</span>
+        </p>
         <ul>
-            <li>Duy trì và cung cấp các dịch vụ cốt lõi của ứng dụng (Tạo nhóm, lập hóa đơn, tính toán chia tiền).</li>
-            <li>Gửi thông báo đẩy (Push Notifications) về các sự thay đổi hóa đơn, chuyến đi trong nhóm thông qua Firebase Cloud Messaging.</li>
-            <li>Cho phép những người dùng khác thêm bạn vào nhóm dựa trên email hoặc số điện thoại của bạn (nếu được bạn cho phép trong phần cấu hình riêng tư).</li>
-            <li>Không mua bán, trao đổi hoặc cung cấp dữ liệu cá nhân của bạn cho bên thứ ba vì bất kỳ mục đích quảng cáo thương mại nào.</li>
+            <li>
+                <span data-lang="vi">Duy trì và cung cấp các dịch vụ cốt lõi của ứng dụng (Tạo nhóm, lập hóa đơn, tính toán chia tiền).</span>
+                <span data-lang="en">Maintain and provide core application services (Group creation, invoicing, bill splitting calculations).</span>
+            </li>
+            <li>
+                <span data-lang="vi">Gửi thông báo đẩy (Push Notifications) về các sự thay đổi hóa đơn, chuyến đi trong nhóm thông qua Firebase Cloud Messaging.</span>
+                <span data-lang="en">Send push notifications about bill and trip changes within groups via Firebase Cloud Messaging.</span>
+            </li>
+            <li>
+                <span data-lang="vi">Cho phép những người dùng khác thêm bạn vào nhóm dựa trên email hoặc số điện thoại của bạn (nếu được bạn cho phép trong phần cấu hình riêng tư).</span>
+                <span data-lang="en">Allow other users to add you to a group based on your email or phone number (if permitted in your privacy settings).</span>
+            </li>
+            <li>
+                <span data-lang="vi">Không mua bán, trao đổi hoặc cung cấp dữ liệu cá nhân của bạn cho bên thứ ba vì bất kỳ mục đích quảng cáo thương mại nào.</span>
+                <span data-lang="en">We do not sell, trade, or share your personal data with third parties for any commercial advertising purposes.</span>
+            </li>
         </ul>
 
-        <h2>3. Chính sách bảo mật dữ liệu Quét hóa đơn bằng AI</h2>
-        <p>Chức năng tự động nhận dạng và phân tích hóa đơn trong DuliVie được hỗ trợ bởi công nghệ trí tuệ nhân tạo (AI):</p>
+        <h2>
+            <span data-lang="vi">3. Chính sách bảo mật dữ liệu Quét hóa đơn bằng AI</span>
+            <span data-lang="en">3. AI Receipt Scan Data Security Policy</span>
+        </h2>
+        <p>
+            <span data-lang="vi">Chức năng tự động nhận dạng và phân tích hóa đơn trong DuliVie được hỗ trợ bởi công nghệ trí tuệ nhân tạo (AI):</span>
+            <span data-lang="en">The automatic receipt recognition and analysis feature in DuliVie is powered by artificial intelligence (AI) technology:</span>
+        </p>
         <ul>
-            <li>Chúng tôi sử dụng cổng kết nối trung gian bảo mật từ máy chủ của ứng dụng đến dịch vụ <strong>Google Gemini API</strong> dưới phân hạng tài khoản trả phí doanh nghiệp (Paid Tier).</li>
-            <li><strong>Cam kết bảo mật dữ liệu AI:</strong> Google và DuliVie cam kết tuyệt đối <strong>không sử dụng</strong> hình ảnh hóa đơn, dữ liệu chi tiêu hoặc bất kỳ nội dung nào do bạn tải lên phục vụ tính năng quét AI này để huấn luyện (train) các mô hình học máy hay trí tuệ nhân tạo. Dữ liệu của bạn được giữ riêng tư hoàn toàn.</li>
-            <li>Ảnh hóa đơn sau khi tải lên thành công để làm minh chứng sẽ được lưu trữ an toàn trên máy chủ đám mây Cloudinary của hệ thống và chỉ hiển thị cho các thành viên trong chuyến đi của bạn.</li>
+            <li>
+                <span data-lang="vi">Chúng tôi sử dụng cổng kết nối trung gian bảo mật từ máy chủ của ứng dụng đến dịch vụ <strong>Google Gemini API</strong> dưới phân hạng tài khoản trả phí doanh nghiệp (Paid Tier).</span>
+                <span data-lang="en">We use a secure server-side gateway from the application server to the <strong>Google Gemini API</strong> under the paid enterprise tier.</span>
+            </li>
+            <li>
+                <span data-lang="vi"><strong>Cam kết bảo mật dữ liệu AI:</strong> Google và DuliVie cam kết tuyệt đối <strong>không sử dụng</strong> hình ảnh hóa đơn, dữ liệu chi tiêu hoặc bất kỳ nội dung nào do bạn tải lên phục vụ tính năng quét AI này để huấn luyện (train) các mô hình học máy hay trí tuệ nhân tạo. Dữ liệu của bạn được giữ riêng tư hoàn toàn.</span>
+                <span data-lang="en"><strong>AI data security commitment:</strong> Google and DuliVie are absolutely committed to <strong>not using</strong> receipt images, spending data, or any content you upload for this AI scan feature to train machine learning or AI models. Your data is kept completely private.</span>
+            </li>
+            <li>
+                <span data-lang="vi">Ảnh hóa đơn sau khi tải lên thành công để làm minh chứng sẽ được lưu trữ an toàn trên máy chủ đám mây Cloudinary của hệ thống và chỉ hiển thị cho các thành viên trong chuyến đi của bạn.</span>
+                <span data-lang="en">Receipt images uploaded as proof are securely stored on the system's Cloudinary cloud server and are only visible to members of your trip.</span>
+            </li>
         </ul>
 
-        <h2>4. Bảo mật thông tin</h2>
-        <p>Chúng tôi triển khai các biện pháp bảo mật tiêu chuẩn công nghiệp nhằm bảo vệ thông tin cá nhân của bạn chống lại việc truy cập, thay đổi hoặc tiết lộ trái phép. Toàn bộ đường truyền kết nối giữa ứng dụng và máy chủ đều được mã hóa bằng giao thức SSL/HTTPS an toàn.</p>
+        <h2>
+            <span data-lang="vi">4. Bảo mật thông tin</span>
+            <span data-lang="en">4. Information Security</span>
+        </h2>
+        <p>
+            <span data-lang="vi">Chúng tôi triển khai các biện pháp bảo mật tiêu chuẩn công nghiệp nhằm bảo vệ thông tin cá nhân của bạn chống lại việc truy cập, thay đổi hoặc tiết lộ trái phép. Toàn bộ đường truyền kết nối giữa ứng dụng và máy chủ đều được mã hóa bằng giao thức SSL/HTTPS an toàn.</span>
+            <span data-lang="en">We implement industry-standard security measures to protect your personal information against unauthorized access, modification, or disclosure. All connections between the application and server are encrypted using the secure SSL/HTTPS protocol.</span>
+        </p>
 
-        <h2>5. Quyền của bạn và Xóa dữ liệu</h2>
-        <p>Bạn có toàn quyền kiểm soát thông tin cá nhân của mình:</p>
+        <h2>
+            <span data-lang="vi">5. Quyền của bạn và Xóa dữ liệu</span>
+            <span data-lang="en">5. Your Rights and Data Deletion</span>
+        </h2>
+        <p>
+            <span data-lang="vi">Bạn có toàn quyền kiểm soát thông tin cá nhân của mình:</span>
+            <span data-lang="en">You have full control over your personal information:</span>
+        </p>
         <ul>
-            <li>Bạn có thể cập nhật hoặc sửa đổi thông tin cá nhân trực tiếp từ trang cấu hình Hồ sơ cá nhân trong app.</li>
-            <li><strong>Quyền yêu cầu xóa tài khoản:</strong> Bạn có thể xóa tài khoản bất cứ lúc nào trực tiếp từ màn hình Hồ sơ cá nhân trong ứng dụng hoặc bằng cách gửi yêu cầu trực tuyến thông qua trang <a href="/delete-account-request" target="_blank" style="color: var(--primary-dark); text-decoration: underline;">Yêu cầu xóa tài khoản</a> của chúng tôi. Khi tài khoản bị xóa, mọi thông tin định danh cá nhân sẽ được xóa vĩnh viễn hoặc vô danh hóa khỏi cơ sở dữ liệu của chúng tôi.</li>
+            <li>
+                <span data-lang="vi">Bạn có thể cập nhật hoặc sửa đổi thông tin cá nhân trực tiếp từ trang cấu hình Hồ sơ cá nhân trong app.</span>
+                <span data-lang="en">You can update or modify personal information directly from the Profile settings page in the app.</span>
+            </li>
+            <li>
+                <span data-lang="vi"><strong>Quyền yêu cầu xóa tài khoản:</strong> Bạn có thể xóa tài khoản bất cứ lúc nào trực tiếp từ màn hình Hồ sơ cá nhân trong ứng dụng hoặc bằng cách gửi yêu cầu trực tuyến thông qua trang <a href="/delete-account-request" target="_blank" style="color: var(--primary-dark); text-decoration: underline;">Yêu cầu xóa tài khoản</a> của chúng tôi. Khi tài khoản bị xóa, mọi thông tin định danh cá nhân sẽ được xóa vĩnh viễn hoặc vô danh hóa khỏi cơ sở dữ liệu của chúng tôi.</span>
+                <span data-lang="en"><strong>Account deletion right:</strong> You can delete your account at any time directly from the Profile screen in the app, or by submitting an online request through our <a href="/delete-account-request" target="_blank" style="color: var(--primary-dark); text-decoration: underline;">Account Deletion Request</a> page. Once deleted, all personal identifying information will be permanently removed or anonymized from our database.</span>
+            </li>
         </ul>
 
-        <h2>6. Thay đổi chính sách bảo mật này</h2>
-        <p>Chúng tôi có thể cập nhật chính sách bảo mật này theo thời gian. Mọi thay đổi sẽ được công bố trên trang này và cập nhật ngày hiệu lực ở trên cùng. Việc tiếp tục sử dụng ứng dụng đồng nghĩa với việc bạn đồng ý với các thay đổi đó.</p>
+        <h2>
+            <span data-lang="vi">6. Thay đổi chính sách bảo mật này</span>
+            <span data-lang="en">6. Changes to This Privacy Policy</span>
+        </h2>
+        <p>
+            <span data-lang="vi">Chúng tôi có thể cập nhật chính sách bảo mật này theo thời gian. Mọi thay đổi sẽ được công bố trên trang này và cập nhật ngày hiệu lực ở trên cùng. Việc tiếp tục sử dụng ứng dụng đồng nghĩa với việc bạn đồng ý với các thay đổi đó.</span>
+            <span data-lang="en">We may update this privacy policy from time to time. Any changes will be published on this page with an updated effective date at the top. Continued use of the application constitutes your agreement to those changes.</span>
+        </p>
 
-        <h2>7. Liên hệ chúng tôi</h2>
-        <p>Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào về Chính sách bảo mật này, xin vui lòng gửi phản hồi trực tiếp qua phần "Báo cáo lỗi & Góp ý" trong ứng dụng của bạn.</p>
+        <h2>
+            <span data-lang="vi">7. Liên hệ chúng tôi</span>
+            <span data-lang="en">7. Contact Us</span>
+        </h2>
+        <p>
+            <span data-lang="vi">Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào về Chính sách bảo mật này, xin vui lòng gửi phản hồi trực tiếp qua phần "Báo cáo lỗi &amp; Góp ý" trong ứng dụng của bạn.</span>
+            <span data-lang="en">If you have any questions or feedback about this Privacy Policy, please send your response directly through the "Report a Bug &amp; Feedback" section in the application.</span>
+        </p>
 
         <div class="footer">
-            &copy; 2026 DuliVie. Bảo lưu mọi quyền.
+            &copy; 2026 DuliVie.
+            <span data-lang="vi">Bảo lưu mọi quyền.</span>
+            <span data-lang="en">All rights reserved.</span>
         </div>
     </div>
+
+    <script>
+        const titles = {
+            vi: 'Chính sách bảo mật - DuliVie',
+            en: 'Privacy Policy - DuliVie'
+        };
+
+        function setLang(lang) {
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                el.style.display = (el.getAttribute('data-lang') === lang) ? '' : 'none';
+            });
+            document.getElementById('btn-vi').classList.toggle('active', lang === 'vi');
+            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+            document.documentElement.lang = lang;
+            document.getElementById('pageTitle').textContent = titles[lang];
+            localStorage.setItem('dv_lang', lang);
+        }
+
+        // Auto-detect: prefer saved preference, then browser language
+        const saved = localStorage.getItem('dv_lang');
+        const browserLang = navigator.language?.startsWith('vi') ? 'vi' : 'en';
+        setLang(saved || browserLang);
+    </script>
 </body>
 </html>

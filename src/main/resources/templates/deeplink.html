@@ -1,23 +1,22 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lời mời tham gia - DuliVie</title>
+    <title id="pageTitle">Trip Invitation - DuliVie</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary: #8bc34a; /* Xanh lá mạ tươi sáng */
+            --primary: #8bc34a;
             --primary-dark: #689f38; 
-            --bg: #f4f9f4; /* Nền trắng hơi ám xanh lục cực nhẹ */
-            --card-bg: #ffffff; /* Thẻ màu trắng tinh */
-            --text: #1e293b; /* Chữ xám đậm, dễ đọc */
-            --text-muted: #64748b; /* Chữ phụ xám nhạt hơn */
+            --bg: #f4f9f4;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
         
         body { 
-            /* Gradient nền dịu mắt */
             background: linear-gradient(135deg, #e8f5e9 0%, #f8fafc 100%); 
             color: var(--text); 
             height: 100vh; 
@@ -35,16 +34,45 @@
             background: var(--card-bg); 
             border-radius: 1.5rem; 
             text-align: center; 
-            box-shadow: 0 20px 40px -10px rgba(100, 116, 139, 0.12); /* Đổ bóng cực êm cho light mode */
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; /* Animation mượt hơn */
+            box-shadow: 0 20px 40px -10px rgba(100, 116, 139, 0.12);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             display: flex; 
             flex-direction: column; 
             align-items: center;
+            position: relative;
         }
         
         @keyframes slideUp { 
             from { opacity: 0; transform: translateY(20px); } 
             to { opacity: 1; transform: translateY(0); } 
+        }
+
+        .lang-toggle {
+            position: absolute;
+            top: 1.2rem;
+            right: 1.2rem;
+            display: inline-flex;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .lang-btn {
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            border-radius: 20px;
+        }
+
+        .lang-btn.active {
+            background: var(--primary);
+            color: #fff;
         }
 
         .badge { 
@@ -125,21 +153,61 @@
             color: var(--primary-dark); 
             text-decoration: underline; 
         }
+
+        [data-lang] { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="badge">LỜI MỜI THAM GIA</div>
+        <div class="lang-toggle">
+            <button class="lang-btn" id="btn-vi" onclick="setLang('vi')">VI</button>
+            <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+        </div>
+
+        <div class="badge">
+            <span data-lang="vi">LỜI MỜI THAM GIA</span>
+            <span data-lang="en">TRIP INVITATION</span>
+        </div>
         <h1>DuliVie</h1>
-        <p>Bạn vừa được mời vào một nhóm chia tiền chung. Hãy mở ứng dụng để tham gia nhé!</p>
+        <p>
+            <span data-lang="vi">Bạn vừa được mời vào một nhóm chia tiền chung. Hãy mở ứng dụng để tham gia nhé!</span>
+            <span data-lang="en">You've been invited to join a group trip. Open the app to join now!</span>
+        </p>
         
-        <img src="/images/join_trip.gif" alt="Tham gia" class="hero-img">
+        <img src="/images/join_trip.gif" alt="Join Trip" class="hero-img">
         
         <a href="{{intentUrl}}" class="btn">
             <svg class="btn-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 22l10-3 10 3L12 2z"/></svg>
-            MỞ ỨNG DỤNG NGAY
+            <span data-lang="vi">MỞ ỨNG DỤNG NGAY</span>
+            <span data-lang="en">OPEN THE APP NOW</span>
         </a>
-        <a href="{{downloadLink}}" class="footer-link">Bạn chưa có App? Tải xuống (Google Drive)</a>
+        <a href="{{downloadLink}}" class="footer-link">
+            <span data-lang="vi">Bạn chưa có App? Tải xuống (Google Drive)</span>
+            <span data-lang="en">Don't have the app? Download it (Google Drive)</span>
+        </a>
     </div>
+
+    <script>
+        const titles = {
+            vi: 'Lời mời tham gia - DuliVie',
+            en: 'Trip Invitation - DuliVie'
+        };
+
+        function setLang(lang) {
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                el.style.display = (el.getAttribute('data-lang') === lang) ? '' : 'none';
+            });
+            document.getElementById('btn-vi').classList.toggle('active', lang === 'vi');
+            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+            document.documentElement.lang = lang;
+            document.getElementById('pageTitle').textContent = titles[lang];
+            localStorage.setItem('dv_lang', lang);
+        }
+
+        // Auto-detect
+        const saved = localStorage.getItem('dv_lang');
+        const browserLang = navigator.language?.startsWith('vi') ? 'vi' : 'en';
+        setLang(saved || browserLang);
+    </script>
 </body>
 </html>

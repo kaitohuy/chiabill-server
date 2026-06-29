@@ -14,42 +14,61 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<?>> handleBusiness(BusinessException ex) {
         log.warn("Business Exception: {}", ex.getMessage());
-        String translatedMessage = translateMessage(ex.getMessage());
+        
+        String errorCode = "UNKNOWN_ERROR";
+        String message = ex.getMessage();
+        
+        if (ex.getErrorCode() != null && ex.getErrorCode() != ErrorCode.UNKNOWN_ERROR) {
+            errorCode = ex.getErrorCode().getCode();
+            message = ex.getErrorCode().getDefaultMessage();
+        } else {
+            // Tương thích ngược: Thử ánh xạ chuỗi tin nhắn thô cũ sang ErrorCode mới
+            ErrorCode mappedCode = mapLegacyMessageToErrorCode(ex.getMessage());
+            if (mappedCode != null) {
+                errorCode = mappedCode.getCode();
+                message = mappedCode.getDefaultMessage();
+            }
+        }
+        
         return ResponseEntity.badRequest().body(
                 ApiResponse.builder()
                         .success(false)
-                        .message(translatedMessage)
+                        .message(message)
+                        .errorCode(errorCode)
                         .build()
         );
     }
 
-    private String translateMessage(String message) {
-        if (message == null) return "";
+    private ErrorCode mapLegacyMessageToErrorCode(String message) {
+        if (message == null) return null;
         switch (message) {
             case "User not found":
-                return "Không tìm thấy người dùng";
+                return ErrorCode.USER_NOT_FOUND;
             case "Trip not found":
-                return "Không tìm thấy chuyến đi";
+                return ErrorCode.TRIP_NOT_FOUND;
             case "Actor not found":
-                return "Không tìm thấy người thực hiện";
+                return ErrorCode.ACTOR_NOT_FOUND;
             case "User already in trip":
-                return "Người dùng đã là thành viên của chuyến đi";
+            case "Người dùng đã là thành viên của chuyến đi.":
+                return ErrorCode.USER_ALREADY_IN_TRIP;
             case "Owner not found":
-                return "Không tìm thấy chủ nhóm";
+                return ErrorCode.OWNER_NOT_FOUND;
             case "Creditor not found":
-                return "Không tìm thấy chủ nợ";
+                return ErrorCode.CREDITOR_NOT_FOUND;
             case "User not in trip":
-                return "Người dùng không thuộc chuyến đi này";
+            case "Bạn không thuộc chuyến đi này":
+                return ErrorCode.USER_NOT_IN_TRIP;
             case "User is not active in trip":
-                return "Người dùng không hoạt động trong chuyến đi này";
+                return ErrorCode.USER_NOT_ACTIVE_IN_TRIP;
             case "Trip has been deleted":
-                return "Chuyến đi đã bị xóa";
+                return ErrorCode.TRIP_HAS_BEEN_DELETED;
             case "Access denied: not a member of this trip":
-                return "Không có quyền truy cập: bạn không phải thành viên của chuyến đi";
+                return ErrorCode.ACCESS_DENIED_NOT_MEMBER;
             case "Access denied":
-                return "Không có quyền truy cập";
+            case "Không có quyền truy cập":
+                return ErrorCode.ACCESS_DENIED;
             default:
-                return message;
+                return null;
         }
     }
 
@@ -69,6 +88,7 @@ public class GlobalExceptionHandler {
                 ApiResponse.builder()
                         .success(false)
                         .message(message)
+                        .errorCode("VALIDATION_ERROR")
                         .build()
         );
     }
@@ -80,6 +100,7 @@ public class GlobalExceptionHandler {
                 ApiResponse.builder()
                         .success(false)
                         .message("Đã có lỗi xảy ra trên hệ thống")
+                        .errorCode("SYSTEM_ERROR")
                         .build()
         );
     }

@@ -18,4 +18,5 @@ public class UserResponse {
     private Boolean allowAutoApprovePayment;
     private String role;
     private Boolean isAnonymous;
+    private String language;
 }

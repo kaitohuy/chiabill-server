@@ -64,10 +64,15 @@ public class NotificationServiceImpl implements NotificationService {
         User receiverUser = userRepository.findById(receiver.getId())
                 .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng"));
 
+        // Determine receiver language and translate title and body
+        String language = receiverUser.getLanguage();
+        String finalTitle = translateTitle(title, type, language);
+        String finalBody = translateBody(body, type, language);
+
         Notification notification = Notification.builder()
                 .user(receiverUser)
-                .title(title)
-                .message(body)
+                .title(finalTitle)
+                .message(finalBody)
                 .type(type)
                 .referenceId(referenceId)
                 .isRead(false)
@@ -99,8 +104,8 @@ public class NotificationServiceImpl implements NotificationService {
 
                 Message.Builder messageBuilder = Message.builder()
                         .setToken(deviceToken.getToken())
-                        .putData("title", title)
-                        .putData("body", body)
+                        .putData("title", finalTitle)
+                        .putData("body", finalBody)
                         .putData("type", type.name())
                         .putData("referenceId", String.valueOf(referenceId));
 
@@ -134,16 +139,16 @@ public class NotificationServiceImpl implements NotificationService {
 
                     com.google.firebase.messaging.Notification.Builder notificationBuilder = 
                             com.google.firebase.messaging.Notification.builder()
-                                    .setTitle(title)
-                                    .setBody(body);
+                                    .setTitle(finalTitle)
+                                    .setBody(finalBody);
                     if (imageUrl != null && !imageUrl.trim().isEmpty()) {
                         notificationBuilder.setImage(imageUrl);
                     }
 
                     messageBuilder
-                            .setNotification(notificationBuilder.build())
-                            .setAndroidConfig(androidConfig)
-                            .setApnsConfig(apnsConfig);
+                             .setNotification(notificationBuilder.build())
+                             .setAndroidConfig(androidConfig)
+                             .setApnsConfig(apnsConfig);
                 }
 
                 Message message = messageBuilder.build();
@@ -159,6 +164,139 @@ public class NotificationServiceImpl implements NotificationService {
                 }
             }
         }
+    }
+
+    private String translateTitle(String title, NotificationType type, String lang) {
+        if (!"en".equalsIgnoreCase(lang) || title == null) {
+            return title;
+        }
+        if ("Tạm ngưng hoạt động".equals(title)) {
+            return "Activity Suspended";
+        }
+        if (title.startsWith("Bạn nhận được thanh toán: ")) {
+            return "Payment Received: " + title.substring("Bạn nhận được thanh toán: ".length());
+        }
+        if (title.startsWith("Thanh toán được phê duyệt: ")) {
+            return "Payment Approved: " + title.substring("Thanh toán được phê duyệt: ".length());
+        }
+        if (title.startsWith("Thanh toán bị từ chối: ")) {
+            return "Payment Rejected: " + title.substring("Thanh toán bị từ chối: ".length());
+        }
+        if (title.startsWith("Thanh toán hộ: ")) {
+            return "Pay on Behalf: " + title.substring("Thanh toán hộ: ".length());
+        }
+        if (title.startsWith("Khoản chi mới: ")) {
+            return "New Expense: " + title.substring("Khoản chi mới: ".length());
+        }
+        if (title.startsWith("Sắp đến lịch trình: ")) {
+            return "Upcoming Itinerary: " + title.substring("Sắp đến lịch trình: ".length());
+        }
+        return title;
+    }
+
+    private String translateBody(String body, NotificationType type, String lang) {
+        if (!"en".equalsIgnoreCase(lang) || body == null) {
+            return body;
+        }
+        
+        // 1. MEMBER_DISABLED
+        if (type == NotificationType.MEMBER_DISABLED && body.startsWith("Bạn vừa bị ")) {
+            int idx1 = body.indexOf(" tạm ngưng hoạt động trong chuyến đi ");
+            if (idx1 != -1) {
+                String actor = body.substring("Bạn vừa bị ".length(), idx1);
+                int idx2 = body.indexOf(", hãy mau chóng làm lành");
+                if (idx2 != -1) {
+                    String trip = body.substring(idx1 + " tạm ngưng hoạt động trong chuyến đi ".length(), idx2);
+                    return "You have been temporarily suspended from the trip \"" + trip + "\" by " + actor + ". Let's make peace soon!";
+                }
+            }
+        }
+        
+        // 2. PAYMENT_REQUESTED
+        if (type == NotificationType.PAYMENT_REQUESTED) {
+            int idx1 = body.indexOf(" đã gửi ");
+            int idx2 = body.indexOf(" cho bạn. Trạng thái: ");
+            if (idx1 != -1 && idx2 != -1) {
+                String payer = body.substring(0, idx1);
+                String amount = body.substring(idx1 + " đã gửi ".length(), idx2);
+                String status = body.substring(idx2 + " cho bạn. Trạng thái: ".length());
+                if ("PENDING".equals(status)) status = "Pending";
+                if ("APPROVED".equals(status)) status = "Approved";
+                if ("REJECTED".equals(status)) status = "Rejected";
+                return payer + " has sent you " + amount + ". Status: " + status;
+            }
+            
+            int idx3 = body.indexOf(" đã thanh toán hộ cho [");
+            int idx4 = body.indexOf("] tổng cộng ");
+            if (idx3 != -1 && idx4 != -1) {
+                String payer = body.substring(0, idx3);
+                String names = body.substring(idx3 + " đã thanh toán hộ cho [".length(), idx4);
+                String amount = body.substring(idx4 + "] tổng cộng ".length());
+                return payer + " paid on behalf of [" + names + "] for a total of " + amount;
+            }
+        }
+        
+        // 3. PAYMENT_APPROVED
+        if (type == NotificationType.PAYMENT_APPROVED && body.contains(" đã xác nhận nhận được số tiền ")) {
+            int idx = body.indexOf(" đã xác nhận nhận được số tiền ");
+            if (idx != -1) {
+                String verifier = body.substring(0, idx);
+                String amount = body.substring(idx + " đã xác nhận nhận được số tiền ".length());
+                return verifier + " has confirmed receiving the payment of " + amount;
+            }
+        }
+        
+        // 4. SYSTEM
+        if (type == NotificationType.SYSTEM && body.contains(" đã từ chối xác nhận số tiền ") && body.contains(". Vui lòng kiểm tra lại.")) {
+            int idx1 = body.indexOf(" đã từ chối xác nhận số tiền ");
+            int idx2 = body.indexOf(". Vui lòng kiểm tra lại.");
+            if (idx1 != -1 && idx2 != -1) {
+                String verifier = body.substring(0, idx1);
+                String amount = body.substring(idx1 + " đã từ chối xác nhận số tiền ".length(), idx2);
+                return verifier + " has rejected the payment of " + amount + ". Please double check.";
+            }
+        }
+        
+        // 5. EXPENSE_CREATED
+        if (type == NotificationType.EXPENSE_CREATED && body.contains(" vừa thêm ") && body.contains(" cho ")) {
+            int idx1 = body.indexOf(" vừa thêm ");
+            int idx2 = body.indexOf(" cho ");
+            if (idx1 != -1 && idx2 != -1) {
+                String payer = body.substring(0, idx1);
+                String amount = body.substring(idx1 + " vừa thêm ".length(), idx2);
+                String category = body.substring(idx2 + " cho ".length());
+                if ("Ăn uống".equalsIgnoreCase(category)) category = "Food & Beverage";
+                else if ("Di chuyển".equalsIgnoreCase(category)) category = "Transport";
+                else if ("Lưu trú".equalsIgnoreCase(category)) category = "Accommodation";
+                else if ("Vui chơi".equalsIgnoreCase(category)) category = "Entertainment";
+                else if ("Mua sắm".equalsIgnoreCase(category)) category = "Shopping";
+                else if ("Khác".equalsIgnoreCase(category)) category = "Others";
+                return payer + " just added " + amount + " for " + category;
+            }
+        }
+        
+        // 6. ITINERARY
+        if (type == NotificationType.ITINERARY && body.startsWith("Thời gian diễn ra: ") && body.contains(" (Báo trước ")) {
+            int idx1 = body.indexOf(" (Báo trước ");
+            if (idx1 != -1) {
+                String timeRange = body.substring("Thời gian diễn ra: ".length(), idx1);
+                String rest = body.substring(idx1 + " (Báo trước ".length());
+                if (rest.endsWith(")")) {
+                    String alarmDetail = rest.substring(0, rest.length() - 1);
+                    String[] alarmParts = alarmDetail.split(" ");
+                    if (alarmParts.length >= 2) {
+                        String val = alarmParts[0];
+                        String unit = alarmParts[1];
+                        if ("Phút".equalsIgnoreCase(unit)) unit = "minutes";
+                        else if ("Giờ".equalsIgnoreCase(unit)) unit = "hours";
+                        else if ("Ngày".equalsIgnoreCase(unit)) unit = "days";
+                        return "Time: " + timeRange + " (Reminded " + val + " " + unit + " in advance)";
+                    }
+                }
+            }
+        }
+        
+        return body;
     }
 
     @Override

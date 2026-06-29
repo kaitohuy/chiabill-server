@@ -61,6 +61,10 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 50)
     private String role = "USER";
 
+    @Builder.Default
+    @Column(nullable = false, length = 10, columnDefinition = "varchar(10) default 'en'")
+    private String language = "en";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "managed_by")
     private User managedBy;

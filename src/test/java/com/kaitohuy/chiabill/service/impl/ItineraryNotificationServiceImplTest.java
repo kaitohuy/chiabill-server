@@ -49,7 +49,7 @@ class ItineraryNotificationServiceImplTest {
 
         trip = new Trip();
         trip.setId(1L);
-        trip.setStartDate(LocalDateTime.of(2026, 6, 10, 10, 0, 0));
+        trip.setStartDate(LocalDateTime.of(2030, 6, 10, 10, 0, 0));
 
         setting = ItineraryAlarmSetting.builder()
                 .id(1L)
@@ -63,10 +63,13 @@ class ItineraryNotificationServiceImplTest {
         item = ItineraryItem.builder()
                 .id(1L)
                 .trip(trip)
-                .dayNumber(2) // Day 2 -> starts on 2026-06-11
+                .dayNumber(2) // Day 2 -> starts on 2030-06-11
                 .timeRange("14:30 - 15:30")
                 .activity("Sightseeing at Temple")
                 .build();
+
+        lenient().when(memberRepository.existsByTripIdAndUserId(anyLong(), anyLong())).thenReturn(true);
+        lenient().when(tripRepository.findById(1L)).thenReturn(Optional.of(trip));
     }
 
     @Test
@@ -74,7 +77,6 @@ class ItineraryNotificationServiceImplTest {
         // GIVEN
         when(settingRepository.findByUserIdAndTripId(1L, 1L)).thenReturn(Optional.of(setting));
         when(itineraryItemRepository.findActiveItineraryByTripId(1L)).thenReturn(Collections.singletonList(item));
-        when(tripRepository.findById(1L)).thenReturn(Optional.of(trip));
 
         // WHEN
         service.rescheduleAlarmsForMember(1L, 1L);
@@ -90,11 +92,11 @@ class ItineraryNotificationServiceImplTest {
         assertEquals("Sắp đến lịch trình: Sightseeing at Temple", savedNotification.getTitle());
         
         // Expected Time calculation:
-        // Start date: 2026-06-10 10:00:00
-        // Day number 2: 2026-06-11
+        // Start date: 2030-06-10 10:00:00
+        // Day number 2: 2030-06-11
         // Start time: 14:30
-        // Alarm value: 15 Phút before -> 2026-06-11 14:15:00
-        LocalDateTime expectedTime = LocalDateTime.of(2026, 6, 11, 14, 15, 0);
+        // Alarm value: 15 Phút before -> 2030-06-11 14:15:00
+        LocalDateTime expectedTime = LocalDateTime.of(2030, 6, 11, 14, 15, 0);
         assertEquals(expectedTime, savedNotification.getScheduledTime());
         assertFalse(savedNotification.getIsSent());
     }
