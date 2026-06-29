@@ -34,6 +34,9 @@ public class AppAnnouncementRequest {
     @Size(max = 100)
     private String actionLabel;
 
+    @Size(max = 100)
+    private String actionLabelEn;
+
     // Cho UPDATE
     private Integer minVersion;
     private Integer latestVersion;

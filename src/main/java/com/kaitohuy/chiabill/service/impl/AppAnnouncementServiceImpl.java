@@ -55,6 +55,7 @@ public class AppAnnouncementServiceImpl implements AppAnnouncementService {
                 .actionType(request.getActionType() != null ? request.getActionType() : AppAnnouncement.ActionType.NONE)
                 .actionUrl(request.getActionUrl())
                 .actionLabel(request.getActionLabel())
+                .actionLabelEn(request.getActionLabelEn())
                 // Update fields
                 .minVersion(request.getMinVersion())
                 .latestVersion(request.getLatestVersion())
@@ -92,6 +93,7 @@ public class AppAnnouncementServiceImpl implements AppAnnouncementService {
         if (request.getActionType() != null) announcement.setActionType(request.getActionType());
         if (request.getActionUrl() != null) announcement.setActionUrl(request.getActionUrl());
         if (request.getActionLabel() != null) announcement.setActionLabel(request.getActionLabel());
+        if (request.getActionLabelEn() != null) announcement.setActionLabelEn(request.getActionLabelEn());
         if (request.getMinVersion() != null) announcement.setMinVersion(request.getMinVersion());
         if (request.getLatestVersion() != null) announcement.setLatestVersion(request.getLatestVersion());
         if (request.getIsForceUpdate() != null) announcement.setIsForceUpdate(request.getIsForceUpdate());

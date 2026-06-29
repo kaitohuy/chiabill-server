@@ -9,6 +9,7 @@ import java.util.List;
 public class PlaceRequest {
     @NotBlank(message = "Tên địa điểm không được để trống")
     private String name;
+    private String nameEn;
 
     @NotBlank(message = "Danh mục không được để trống")
     private String category;
@@ -20,9 +21,13 @@ public class PlaceRequest {
     private Double longitude;
 
     private String city;
+    private String cityEn;
     private String summary;
+    private String summaryEn;
     private String ticketPrices;
+    private String ticketPricesEn;
     private String openingHours;
+    private String openingHoursEn;
     
     private List<String> imageUrls;
 }

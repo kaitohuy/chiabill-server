@@ -23,6 +23,9 @@ public class Place extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(length = 255)
+    private String nameEn;
+
     @Column(length = 50)
     private String category; // BEACH, MOUNTAIN, AMUSEMENT_PARK, MALL, etc.
 
@@ -34,14 +37,26 @@ public class Place extends BaseEntity {
 
     private String city;
 
+    @Column(length = 255)
+    private String cityEn;
+
     @Column(columnDefinition = "TEXT")
     private String summary;
 
     @Column(columnDefinition = "TEXT")
+    private String summaryEn;
+
+    @Column(columnDefinition = "TEXT")
     private String ticketPrices;
+
+    @Column(columnDefinition = "TEXT")
+    private String ticketPricesEn;
 
     @Column(length = 100)
     private String openingHours;
+
+    @Column(length = 100)
+    private String openingHoursEn;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id") // Null if seeded by system, otherwise the user who created it

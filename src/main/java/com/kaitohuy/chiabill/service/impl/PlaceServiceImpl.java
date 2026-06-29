@@ -65,13 +65,18 @@ public class PlaceServiceImpl implements PlaceService {
 
         Place place = Place.builder()
                 .name(request.getName())
+                .nameEn(request.getNameEn())
                 .category(request.getCategory())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .city(request.getCity())
+                .cityEn(request.getCityEn())
                 .summary(request.getSummary())
+                .summaryEn(request.getSummaryEn())
                 .ticketPrices(request.getTicketPrices())
+                .ticketPricesEn(request.getTicketPricesEn())
                 .openingHours(request.getOpeningHours())
+                .openingHoursEn(request.getOpeningHoursEn())
                 .creator(creator)
                 .build();
 
@@ -108,13 +113,18 @@ public class PlaceServiceImpl implements PlaceService {
         }
 
         place.setName(request.getName());
+        place.setNameEn(request.getNameEn());
         place.setCategory(request.getCategory());
         place.setLatitude(request.getLatitude());
         place.setLongitude(request.getLongitude());
         place.setCity(request.getCity());
+        place.setCityEn(request.getCityEn());
         place.setSummary(request.getSummary());
+        place.setSummaryEn(request.getSummaryEn());
         place.setTicketPrices(request.getTicketPrices());
+        place.setTicketPricesEn(request.getTicketPricesEn());
         place.setOpeningHours(request.getOpeningHours());
+        place.setOpeningHoursEn(request.getOpeningHoursEn());
 
         // Update images: Simple approach - delete old, add new
         List<PlaceImage> oldImages = placeImageRepository.findAllByPlaceIdAndIsDeletedFalse(id);
@@ -167,13 +177,18 @@ public class PlaceServiceImpl implements PlaceService {
         return PlaceResponse.builder()
                 .id(place.getId())
                 .name(place.getName())
+                .nameEn(place.getNameEn())
                 .category(place.getCategory())
                 .latitude(place.getLatitude())
                 .longitude(place.getLongitude())
                 .city(place.getCity())
+                .cityEn(place.getCityEn())
                 .summary(place.getSummary())
+                .summaryEn(place.getSummaryEn())
                 .ticketPrices(place.getTicketPrices())
+                .ticketPricesEn(place.getTicketPricesEn())
                 .openingHours(place.getOpeningHours())
+                .openingHoursEn(place.getOpeningHoursEn())
                 .images(images)
                 .creatorId(place.getCreator() != null ? place.getCreator().getId() : null)
                 .isUserGenerated(place.getCreator() != null)

@@ -63,6 +63,9 @@ public class AppAnnouncement extends BaseEntity {
     @Column(length = 100)
     private String actionLabel;
 
+    @Column(length = 100)
+    private String actionLabelEn;
+
     // ===== CHỈ DÙNG CHO UPDATE =====
     /** Version code tối thiểu, dưới mức này sẽ bị yêu cầu update */
     private Integer minVersion;

@@ -25,6 +25,7 @@ public class AppAnnouncementResponse {
     private AppAnnouncement.ActionType actionType;
     private String actionUrl;
     private String actionLabel;
+    private String actionLabelEn;
 
     // Chỉ cho UPDATE
     private Integer minVersion;
