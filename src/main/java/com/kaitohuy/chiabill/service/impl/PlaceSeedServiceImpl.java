@@ -69,13 +69,18 @@ public class PlaceSeedServiceImpl implements PlaceSeedService {
 
                     Place place = Place.builder()
                             .name(req.getName())
+                            .nameEn(req.getNameEn())
                             .category(req.getCategory())
                             .latitude(req.getLatitude())
                             .longitude(req.getLongitude())
                             .city(req.getCity())
+                            .cityEn(req.getCityEn())
                             .summary(req.getSummary())
+                            .summaryEn(req.getSummaryEn())
                             .ticketPrices(req.getTicketPrices())
+                            .ticketPricesEn(req.getTicketPricesEn())
                             .openingHours(req.getOpeningHours())
+                            .openingHoursEn(req.getOpeningHoursEn())
                             .creator(null)
                             .build();
 
