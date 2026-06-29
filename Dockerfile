@@ -6,11 +6,11 @@ WORKDIR /app
 COPY gradle gradle
 COPY gradlew settings.gradle build.gradle ./
 RUN chmod +x ./gradlew
-RUN ./gradlew dependencies --no-daemon
+RUN ./gradlew dependencies --no-daemon -Dorg.gradle.jvmargs="-Xmx512m"
 
 # Copy source code và build
 COPY src src
-RUN ./gradlew build -x test --no-daemon
+RUN ./gradlew build -x test --no-daemon -Dorg.gradle.jvmargs="-Xmx512m"
 
 # Run stage
 FROM eclipse-temurin:21-jre-jammy
