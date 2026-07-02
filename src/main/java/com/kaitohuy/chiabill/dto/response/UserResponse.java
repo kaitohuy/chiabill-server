@@ -19,4 +19,5 @@ public class UserResponse {
     private String role;
     private Boolean isAnonymous;
     private String language;
+    private String defaultCurrency;
 }

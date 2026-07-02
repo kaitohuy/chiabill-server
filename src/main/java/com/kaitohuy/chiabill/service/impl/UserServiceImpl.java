@@ -104,6 +104,13 @@ public class UserServiceImpl implements UserService {
             }
         }
 
+        if (request.getDefaultCurrency() != null) {
+            String currency = request.getDefaultCurrency().trim().toUpperCase();
+            if (!currency.isEmpty()) {
+                user.setDefaultCurrency(currency);
+            }
+        }
+
         return userMapper.toResponse(userRepository.save(user));
     }
 

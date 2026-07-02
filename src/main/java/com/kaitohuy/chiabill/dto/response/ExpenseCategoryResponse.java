@@ -9,6 +9,7 @@ import lombok.*;
 public class ExpenseCategoryResponse {
     private Long id;
     private String name;
+    private String nameEn;
     private String icon;
     private Long tripId;
 }

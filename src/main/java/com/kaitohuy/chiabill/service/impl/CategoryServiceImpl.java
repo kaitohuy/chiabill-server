@@ -61,37 +61,37 @@ public class CategoryServiceImpl implements CategoryService {
         if (categoryRepository.findByTripIdIsNull().isEmpty()) {
             List<ExpenseCategory> defaults = List.of(
                     // 1. Nhóm Ăn uống (Food & Drink)
-                    ExpenseCategory.builder().name("Ăn uống (Chung)").icon("🍽️").build(),
-                    ExpenseCategory.builder().name("Cà phê & Nước").icon("☕").build(),
-                    ExpenseCategory.builder().name("Nhậu & Party").icon("🍻").build(),
-                    ExpenseCategory.builder().name("Ăn vặt / Lề đường").icon("🍢").build(),
-                    ExpenseCategory.builder().name("Đi chợ / Siêu thị").icon("🛒").build(),
+                    ExpenseCategory.builder().name("Ăn uống (Chung)").nameEn("Food & Dining").icon("🍽️").build(),
+                    ExpenseCategory.builder().name("Cà phê & Nước").nameEn("Coffee & Drinks").icon("☕").build(),
+                    ExpenseCategory.builder().name("Nhậu & Party").nameEn("Drinks & Party").icon("🍻").build(),
+                    ExpenseCategory.builder().name("Ăn vặt / Lề đường").nameEn("Street Food / Snacks").icon("🍢").build(),
+                    ExpenseCategory.builder().name("Đi chợ / Siêu thị").nameEn("Groceries").icon("🛒").build(),
 
                     // 2. Nhóm Di chuyển (Transportation)
-                    ExpenseCategory.builder().name("Vé máy bay / Tàu").icon("✈️").build(),
-                    ExpenseCategory.builder().name("Xe khách / Bus").icon("🚌").build(),
-                    ExpenseCategory.builder().name("Taxi / Grab").icon("🚕").build(),
-                    ExpenseCategory.builder().name("Thuê xe").icon("🛵").build(),
-                    ExpenseCategory.builder().name("Đổ xăng / Gửi xe").icon("⛽").build(),
-                    ExpenseCategory.builder().name("Phí cầu đường / Trạm thu phí").icon("🛣️").build(),
+                    ExpenseCategory.builder().name("Vé máy bay / Tàu").nameEn("Flights / Trains").icon("✈️").build(),
+                    ExpenseCategory.builder().name("Xe khách / Bus").nameEn("Bus / Coach").icon("🚌").build(),
+                    ExpenseCategory.builder().name("Taxi / Grab").nameEn("Taxi / Grab").icon("🚕").build(),
+                    ExpenseCategory.builder().name("Thuê xe").nameEn("Vehicle Rental").icon("🛵").build(),
+                    ExpenseCategory.builder().name("Đổ xăng / Gửi xe").nameEn("Gas / Parking").icon("⛽").build(),
+                    ExpenseCategory.builder().name("Phí cầu đường / Trạm thu phí").nameEn("Tolls").icon("🛣️").build(),
 
                     // 3. Nhóm Lưu trú (Accommodation)
-                    ExpenseCategory.builder().name("Khách sạn / Homestay").icon("🏨").build(),
-                    ExpenseCategory.builder().name("Thuê lều / Cắm trại").icon("⛺").build(),
+                    ExpenseCategory.builder().name("Khách sạn / Homestay").nameEn("Hotel / Homestay").icon("🏨").build(),
+                    ExpenseCategory.builder().name("Thuê lều / Cắm trại").nameEn("Camping / Tent").icon("⛺").build(),
 
                     // 4. Nhóm Vui chơi & Giải trí (Entertainment)
-                    ExpenseCategory.builder().name("Vé tham quan").icon("🎟️").build(),
-                    ExpenseCategory.builder().name("Tour du lịch").icon("🗺️").build(),
-                    ExpenseCategory.builder().name("Karaoke / Club").icon("🎤").build(),
-                    ExpenseCategory.builder().name("Team Building").icon("🎯").build(),
+                    ExpenseCategory.builder().name("Vé tham quan").nameEn("Sightseeing Tickets").icon("🎟️").build(),
+                    ExpenseCategory.builder().name("Tour du lịch").nameEn("Tour / Guide").icon("🗺️").build(),
+                    ExpenseCategory.builder().name("Karaoke / Club").nameEn("Karaoke / Club").icon("🎤").build(),
+                    ExpenseCategory.builder().name("Team Building").nameEn("Team Building").icon("🎯").build(),
 
                     // 5. Nhóm Khác (Miscellaneous)
-                    ExpenseCategory.builder().name("Mua sắm / Quà cáp").icon("🎁").build(),
-                    ExpenseCategory.builder().name("Y tế / Thuốc men").icon("💊").build(),
-                    ExpenseCategory.builder().name("Đồ dùng cá nhân").icon("🧻").build(),
-                    ExpenseCategory.builder().name("Tiền Tip / Bồi dưỡng").icon("💸").build(),
-                    ExpenseCategory.builder().name("Chi phí phát sinh").icon("⚠").build(),
-                    ExpenseCategory.builder().name("Quỹ chung").icon("💰").build()
+                    ExpenseCategory.builder().name("Mua sắm / Quà cáp").nameEn("Shopping / Gifts").icon("🎁").build(),
+                    ExpenseCategory.builder().name("Y tế / Thuốc men").nameEn("Medical / Pharmacy").icon("💊").build(),
+                    ExpenseCategory.builder().name("Đồ dùng cá nhân").nameEn("Personal Care").icon("🧻").build(),
+                    ExpenseCategory.builder().name("Tiền Tip / Bồi dưỡng").nameEn("Tips").icon("💸").build(),
+                    ExpenseCategory.builder().name("Chi phí phát sinh").nameEn("Incidental Expenses").icon("⚠").build(),
+                    ExpenseCategory.builder().name("Quỹ chung").nameEn("Group Fund").icon("💰").build()
             );
             categoryRepository.saveAll(defaults);
         }
@@ -101,6 +101,7 @@ public class CategoryServiceImpl implements CategoryService {
         return ExpenseCategoryResponse.builder()
                 .id(ec.getId())
                 .name(ec.getName())
+                .nameEn(ec.getNameEn())
                 .icon(ec.getIcon())
                 .tripId(ec.getTrip() != null ? ec.getTrip().getId() : null)
                 .build();

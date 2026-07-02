@@ -19,6 +19,9 @@ public class ExpenseCategory extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "name_en")
+    private String nameEn;
+
     private String icon;
 
     // Nếu trip_id null -> Danh mục hệ thống dùng chung

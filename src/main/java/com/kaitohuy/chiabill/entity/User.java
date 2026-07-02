@@ -65,6 +65,10 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 10, columnDefinition = "varchar(10) default 'en'")
     private String language = "en";
 
+    @Builder.Default
+    @Column(name = "default_currency", length = 10, columnDefinition = "varchar(10) default 'VND'")
+    private String defaultCurrency = "VND";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "managed_by")
     private User managedBy;

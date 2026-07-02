@@ -26,4 +26,5 @@ public class UpdateProfileRequest {
     private Boolean allowAutoAdd;
     private Boolean allowAutoApprovePayment;
     private String language;
+    private String defaultCurrency;
 }
